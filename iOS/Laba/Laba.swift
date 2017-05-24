@@ -187,7 +187,7 @@ typealias DescribeAction = ((inout String, LabaAction) -> Void)
 
 public class Laba {
     
-    public let labaDefaultValue : Double = Double.leastNormalMagnitude;
+    public let labaDefaultValue : Double = Double.leastNormalMagnitude
     
     public var timeScale = 1.0
     
@@ -197,9 +197,9 @@ public class Laba {
     
     public static let shared = Laba()
     private init() {
-        InitActions = [Int8: InitAction]();
-        PerformActions = [Int8: PerformAction]();
-        DescribeActions = [Int8: DescribeAction]();
+        InitActions = [Int8: InitAction]()
+        PerformActions = [Int8: PerformAction]()
+        DescribeActions = [Int8: DescribeAction]()
         
         
         // *** DURATION ***
@@ -239,7 +239,7 @@ public class Laba {
             "f",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = 1.0;
+                    action.rawValue = 1.0
                 }
                 if(action.inverse == false){
                     action.fromValue = Double(action.target!.alpha)
@@ -254,9 +254,9 @@ public class Laba {
         },
             { (description, action) in
                 if(action.inverse == false) {
-                    description.append("fade to \(action.rawValue*100)%")
+                    description.append("fade to \(Int(action.rawValue*100))%")
                 } else {
-                    description.append("fade from \(action.fromValue * 100)% to \(action.toValue * 100)%")
+                    description.append("fade from \(Int(action.fromValue * 100))% to \(action.toValue * 100)%")
                 }
         })
         // ************
@@ -267,12 +267,12 @@ public class Laba {
     
     private func ParseAnimationString(_ target:UIView, _ charString:[Int8], _ startIdx:Int, _ endIdx:Int) -> [[LabaAction]] {
         
-        var idx : Int = startIdx;
+        var idx : Int = startIdx
         
         let isOperator : ((Int8) -> Bool) = { (c) in
             // '|' or '!' or 'e'
             if (c == 124 || c == 33 || c == 101) {
-                return true;
+                return true
             }
             return self.InitActions[c] != nil
         }
@@ -310,7 +310,7 @@ public class Laba {
                     } else {
                         action = c
                         idx += 1
-                        break;
+                        break
                     }
                 }
                 idx += 1
@@ -351,11 +351,11 @@ public class Laba {
                             }
                         }
                         if (c == 46) { // '.'
-                            fractionalPart = true;
+                            fractionalPart = true
                         }
                     }
                     if (isOperator (c)) {
-                        break;
+                        break
                     }
                     idx += 1
                 }
@@ -394,6 +394,80 @@ public class Laba {
     
     
     private func AnimateOne(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
+        
+        sb = nil
+        
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, pipeIdx, duration, onComplete) in
+                var localActionList:[[LabaAction]] = actionList
+                
+                if (loopRelative) {
+                    var lastV : Double = 1.0
+                    
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                        if (period.progress < lastV) {
+                            for j in 0..<self.kMaxActions {
+                                if !localActionList [pipeIdx][j].Reset() {
+                                    break
+                                }
+                            }
+                        }
+                        lastV = period.progress
+                        for i in 0..<self.kMaxActions {
+                            if (!localActionList [pipeIdx][i].Perform(period.progress)) {
+                                break
+                            }
+                        }
+                    }, completeBlock: { () in
+                        if onComplete != nil {
+                            onComplete?()
+                        }
+                    }))
+                    
+                    // todo: .setLoopCount ((int)looping)
+                } else {
+                    for j in 0..<self.kMaxActions {
+                        if !localActionList [pipeIdx][j].Reset() {
+                            break
+                        }
+                    }
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                        for i in 0..<self.kMaxActions {
+                            if (!localActionList [pipeIdx][i].Perform(period.progress)) {
+                                break
+                            }
+                        }
+                    }, completeBlock: { () in
+                        if onComplete != nil {
+                            onComplete?()
+                        }
+                    }))
+                    // todo: .setLoopCount ((int)looping)
+                }
+            }
+        )
+    }
+    
+    
+    private var sb:String? = nil
+    private func DescribeOne(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
+        
+        sb = ""
+        
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, pipeIdx, duration, onComplete) in
+                var localActionList:[[LabaAction]] = actionList
+                for i in 0..<self.kMaxActions {
+                    if !localActionList [pipeIdx][i].Describe (&self.sb!) {
+                        break
+                    }
+                }
+            }
+        )
+        
+        print(sb!.replacingOccurrences(of: "  ", with: " ").replacingOccurrences(of: "  ", with: " "))
+    }
+    
+    
+    private func SharedProcessIndividualLabaString(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Double,(()->Void)?)->Void)) {
         var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
         let durationAction1 : Int8 = 100 // 'd'
         let durationAction2 : Int8 = 68 // 'D'
@@ -426,57 +500,36 @@ public class Laba {
             }
         }
         
-        
-        let GenerateTweenOperations : ((Bool,Int,Double,(()->Void)?)->Void) = { (loopRelative, pipeIdx, duration, onComplete) in
-            if (loopRelative) {
-                var lastV : Double = 1.0
-                
-                MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
-                    if (period.progress < lastV) {
-                        for j in 0..<self.kMaxActions {
-                            if !actionList [pipeIdx][j].Reset() {
-                                break
-                            }
-                        }
-                    }
-                    lastV = period.progress
-                    for i in 0..<self.kMaxActions {
-                        if (!actionList [pipeIdx][i].Perform(period.progress)) {
-                            break;
-                        }
-                    }
-                }, completeBlock: { () in
-                    if onComplete != nil {
-                        onComplete?()
-                    }
-                }))
-                
-                // todo: .setLoopCount ((int)looping);
-            } else {
-                for j in 0..<self.kMaxActions {
-                    if !actionList [pipeIdx][j].Reset() {
-                        break
-                    }
-                }
-                MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
-                    for i in 0..<self.kMaxActions {
-                        if (!actionList [pipeIdx][i].Perform(period.progress)) {
-                            break;
-                        }
-                    }
-                }, completeBlock: { () in
-                    if onComplete != nil {
-                        onComplete?()
-                    }
-                }))
-                // todo: .setLoopCount ((int)looping);
-            }
+        var oldDescriptionHash:Int = 0
+        if sb != nil {
+            oldDescriptionHash = sb!.hash
         }
-        
         
         // having only a single pipe makes things much more efficient, so treat it separately
         if (numOfPipes == 1) {
-            GenerateTweenOperations(loopingRelative, 0, duration, onComplete)
+            
+            processOperation(actionList, loopingRelative, 0, duration, onComplete)
+            
+            if sb != nil {
+                
+                if  looping > 1 {
+                    sb!.append(" \(looping) repeating \(loopingRelative) times, ")
+                } else if (looping == -1) {
+                    sb!.append(" \(loopingRelative) repeating forever, ")
+                }
+                
+                if oldDescriptionHash != sb?.hash {
+                    sb!.append (" \(actionList [0][0].easingName!)  ")
+                    if duration == 0 {
+                        sb!.append (" instantly.")
+                    }else{
+                        sb!.append (" over \(duration * timeScale) seconds.")
+                    }
+                } else {
+                    sb!.append (" wait for \(duration * timeScale) seconds.")
+                }
+            }
+            
         } else {
             
             var nextAction : (()->Void)? = nil
@@ -509,9 +562,35 @@ public class Laba {
                 }
                 
                 nextAction = { () in
-                    GenerateTweenOperations(loopingRelativeForPipe, pipeIdx, durationForPipe, localNextAction)
+                    processOperation(actionList, loopingRelativeForPipe, pipeIdx, durationForPipe, localNextAction)
+                    
+                    if self.sb != nil {
+                        if  loopingForPipe > 1 {
+                            self.sb!.append(" \(loopingForPipe) repeating \(loopingRelativeForPipe) times, ")
+                        } else if (loopingForPipe == -1) {
+                            self.sb!.append(" \(loopingRelativeForPipe) repeating forever, ")
+                        }
+                        
+                        if oldDescriptionHash != self.sb?.hash {
+                            self.sb!.append (" \(actionList [pipeIdx][0].easingName!)  ")
+                            if durationForPipe == 0 {
+                                self.sb!.append (" instantly.")
+                            }else{
+                                self.sb!.append (" over \(durationForPipe * self.timeScale) seconds.")
+                            }
+                        } else {
+                            self.sb!.append (" wait for \(durationForPipe * self.timeScale) seconds.")
+                        }
+                        
+                        if (pipeIdx + 1 < numOfPipes) {
+                            self.sb!.append (" Once complete then  ")
+                        }
+                        
+                        if localNextAction != nil {
+                            localNextAction!()
+                        }
+                    }
                 }
-            
             }
             
             if nextAction != nil {
@@ -521,15 +600,13 @@ public class Laba {
                     onComplete? ()
                 }
             }
-            
         }
-        
-        
     }
+
     
     
-    public func Animate(target:UIView, animationString:String, onComplete:(()->Void)?) {
-        var localOnComplete = onComplete
+    private func SharedAnimateProcessString(_ animationString:String, _ performActionOnLabaString: (([Int8],Int,Int)->Void)) {
+        
         var animationAsciiString : [Int8] = animationString.asciiArray8
         var isMultipleAnimations = false
         
@@ -558,8 +635,7 @@ public class Laba {
                     
                     for j in 0..<animationAsciiString.count {
                         if animationAsciiString[j] == 0 {
-                            AnimateOne(target, animationAsciiString, i+1, j, localOnComplete)
-                            localOnComplete = nil
+                            performActionOnLabaString(animationAsciiString, i+1, j)
                         }
                     }
                     
@@ -567,25 +643,41 @@ public class Laba {
             }
             
         } else {
-            AnimateOne(target, animationAsciiString, 0, animationAsciiString.count, onComplete)
+            performActionOnLabaString(animationAsciiString, 0, animationAsciiString.count)
         }
+        
     }
     
+    public func Animate(target:UIView, animationString:String, onComplete:(()->Void)?) {
+        
+        var localOnComplete = onComplete
+
+        SharedAnimateProcessString(animationString, { (animationAsciiString, startIdx, endIdx) in
+            AnimateOne(target, animationAsciiString, startIdx, endIdx, localOnComplete)
+            localOnComplete = nil
+        })
+    }
     
+    public func Describe(target:UIView, animationString:String) {
+        
+        SharedAnimateProcessString(animationString, { (animationAsciiString, startIdx, endIdx) in
+            DescribeOne(target, animationAsciiString, startIdx, endIdx, nil)
+        })
+    }
     
     
     
 
     
-    var InitActions:[Int8: InitAction];
-    var PerformActions:[Int8: PerformAction];
-    var DescribeActions:[Int8: DescribeAction];
+    var InitActions:[Int8: InitAction]
+    var PerformActions:[Int8: PerformAction]
+    var DescribeActions:[Int8: DescribeAction]
     
     private func RegisterOperation(_ stringOperator:String, _ initAction:@escaping InitAction, _ performAction:@escaping PerformAction, _ describeAction:@escaping DescribeAction) {
         let charOperator:Int8 = stringOperator.utf8CString[0]
-        InitActions [charOperator] = initAction;
-        PerformActions [charOperator] = performAction;
-        DescribeActions [charOperator] = describeAction;
+        InitActions [charOperator] = initAction
+        PerformActions [charOperator] = performAction
+        DescribeActions [charOperator] = describeAction
     }
     
     
