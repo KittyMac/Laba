@@ -15,7 +15,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         
-        Laba.shared.Animate(target: self.view, animationString: "f0|f1|f0|f1", onComplete: nil)
+        Laba.shared.Animate(target: self.view, animationString: "f0|f1|d3f0|d3f1", onComplete: nil)
         
         
     }

@@ -202,6 +202,38 @@ public class Laba {
         DescribeActions = [Int8: DescribeAction]();
         
         
+        // *** DURATION ***
+        RegisterOperation(
+            "d",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = self.kDefaultDuration
+                }
+                action.fromValue = action.rawValue
+                action.toValue = action.rawValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
+        
+        
+        // *** STAGGERED DURATION ***
+        RegisterOperation(
+            "D",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = self.kDefaultDuration
+                }
+                action.fromValue = action.rawValue * Double((action.target!.superview?.subviews.index(of: action.target!))!)
+                action.toValue = action.fromValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
+        
+        
         // *** FADE ***
         RegisterOperation(
             "f",

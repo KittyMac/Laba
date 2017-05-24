@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Laba/Laba.swift"
-            timestampString = "517286581.1462"
+            timestampString = "517287858.386585"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "540"
-            endingLineNumber = "540"
+            startingLineNumber = "570"
+            endingLineNumber = "570"
             landmarkName = "Animate(target:animationString:onComplete:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Laba/Laba.swift"
-            timestampString = "517286196.867756"
+            timestampString = "517287858.386585"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "367"
-            endingLineNumber = "367"
+            startingLineNumber = "398"
+            endingLineNumber = "398"
             landmarkName = "AnimateOne(_:_:_:_:_:)"
             landmarkType = "7">
          </BreakpointContent>
