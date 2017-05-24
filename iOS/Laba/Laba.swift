@@ -34,6 +34,7 @@
  */
 
 import Foundation
+import MKTween
 
 extension String {
     
@@ -75,13 +76,15 @@ extension String {
     }
 }
 
+
+
 struct LabaAction {
     public var inverse : Bool
-    public var rawValue : Float
+    public var rawValue : Double
     public var operatorChar : Int8
     
-    public var fromValue : Float
-    public var toValue : Float
+    public var fromValue : Double
+    public var toValue : Double
     
     public var target : UIView?
     public var performAction : PerformAction?
@@ -91,8 +94,8 @@ struct LabaAction {
     public var easingName : String?
     
     
-    public var userFloat_1 : Float
-    public var userFloat_2 : Float
+    public var userDouble_1 : Double
+    public var userDouble_2 : Double
     public var userVector2_1 : CGPoint
     public var userVector2_2 : CGPoint
     
@@ -110,13 +113,13 @@ struct LabaAction {
         easingAction = nil
         easingName = nil
         
-        userFloat_1 = 0
-        userFloat_2 = 0
+        userDouble_1 = 0
+        userDouble_2 = 0
         userVector2_1 = CGPoint.zero
         userVector2_2 = CGPoint.zero
     }
     
-    init(_ operatorChar:Int8, _ target:UIView, _ inverse:Bool, _ rawValue:Float, _ easing:@escaping EasingAction, _ easingName:String) {
+    init(_ operatorChar:Int8, _ target:UIView, _ inverse:Bool, _ rawValue:Double, _ easing:@escaping EasingAction, _ easingName:String) {
         self.operatorChar = operatorChar
         self.target = target
         self.inverse = inverse
@@ -136,8 +139,8 @@ struct LabaAction {
             toValue = 0.0
         }
         
-        userFloat_1 = 0.0
-        userFloat_2 = 0.0
+        userDouble_1 = 0.0
+        userDouble_2 = 0.0
         userVector2_1 = CGPoint.zero
         userVector2_2 = CGPoint.zero
         
@@ -145,20 +148,52 @@ struct LabaAction {
             self.initAction?(&self)
         }
     }
+    
+    mutating func Reset() -> Bool {
+        if (self.initAction != nil) {
+            let tempAction = LabaAction (operatorChar, target!, inverse, rawValue, easingAction!, easingName!)
+            self.fromValue = tempAction.fromValue
+            self.toValue = tempAction.toValue
+            self.userDouble_1 = tempAction.userDouble_1
+            self.userDouble_2 = tempAction.userDouble_2
+            self.userVector2_1 = tempAction.userVector2_1
+            self.userVector2_2 = tempAction.userVector2_2
+            return true
+        }
+        return false
+    }
+    
+    public func Perform(_ v:Double) -> Bool {
+        if performAction != nil {
+            performAction? (target!, easingAction!(v, fromValue, toValue - fromValue, 1.0), self)
+            return true
+        }
+        return false
+    }
+    
+    public func Describe(_ sb:inout String) -> Bool {
+        if describeAction != nil {
+            describeAction? (&sb, self)
+            return true
+        }
+        return false
+    }
 }
 
-typealias EasingAction = ((Float, Float, Float) -> Float)
+typealias EasingAction = MKTweenTimingFunction
 typealias InitAction = ((inout LabaAction) -> Void)
-typealias PerformAction = ((UIView, Float, LabaAction) -> Void)
+typealias PerformAction = ((UIView, Double, LabaAction) -> Void)
 typealias DescribeAction = ((inout String, LabaAction) -> Void)
 
 public class Laba {
     
-    public let labaDefaultValue : Float = Float.leastNormalMagnitude;
+    public let labaDefaultValue : Double = Double.leastNormalMagnitude;
+    
+    public var timeScale = 1.0
     
     private let kMaxPipes = 10
     private let kMaxActions = 10
-    private let kDefaultDuration = 0.87
+    private let kDefaultDuration : Double = 0.87
     
     public static let shared = Laba()
     private init() {
@@ -175,7 +210,7 @@ public class Laba {
                     action.rawValue = 1.0;
                 }
                 if(action.inverse == false){
-                    action.fromValue = (Float)(action.target!.alpha)
+                    action.fromValue = Double(action.target!.alpha)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = (action.rawValue > 0.5 ? 0.0 : 1.0)
@@ -183,7 +218,7 @@ public class Laba {
                 }
         },
             { (view, v, action) in
-                action.target!.alpha = (CGFloat)(v)
+                action.target!.alpha = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -198,9 +233,9 @@ public class Laba {
     
     
     
-    private func ParseAnimationString(_ target:UIView, _ charString:[Int8]) -> [[LabaAction]] {
+    private func ParseAnimationString(_ target:UIView, _ charString:[Int8], _ startIdx:Int, _ endIdx:Int) -> [[LabaAction]] {
         
-        var idx : Int = 0;
+        var idx : Int = startIdx;
         
         let isOperator : ((Int8) -> Bool) = { (c) in
             // '|' or '!' or 'e'
@@ -224,17 +259,15 @@ public class Laba {
         var combinedActions : [[LabaAction]] = [[LabaAction]](repeating: [LabaAction](repeating: LabaAction(), count: kMaxActions), count: kMaxPipes)
         var currentPipeIdx : Int = 0
         var currentActionIdx: Int = 0
-        var easingAction : EasingAction = { (from, to, v) in
-            return (to - from) * v + from
-        }
+        var easingAction : EasingAction = MKTweenTiming.CubicInOut
         var easingName = ""
         
-        while (idx < charString.count) {
+        while (idx < endIdx) {
             var invertNextOperator = false
             var action : Int8 = 32 // ascii for ' '
             
             // find the next operator
-            while (idx < charString.count) {
+            while (idx < endIdx) {
                 let c = charString [idx]
                 if (isOperator (c)) {
                     if (c == 33) { // c == '!'
@@ -252,14 +285,14 @@ public class Laba {
             }
             
             // skip anything not important
-            while (idx < charString.count && isNumber (charString [idx]) == false && isOperator (charString [idx]) == false) {
+            while (idx < endIdx && isNumber (charString [idx]) == false && isOperator (charString [idx]) == false) {
                 idx += 1
             }
             
-            var value : Float = labaDefaultValue
+            var value : Double = labaDefaultValue
             
             // if this is a number read it in
-            if (idx < charString.count && isNumber (charString [idx])) {
+            if (idx < endIdx && isNumber (charString [idx])) {
                 
                 // read in numerical value (if it exists)
                 var isNegativeNumber = false
@@ -273,16 +306,16 @@ public class Laba {
                 value = 0.0
                 
                 var fractionalPart = false
-                var fractionalValue : Float = 10.0
-                while (idx < charString.count) {
+                var fractionalValue : Double = 10.0
+                while (idx < endIdx) {
                     let c = charString [idx]
                     if (isNumber (c)) {
                         if (c >= 48 && c <= 57) { // '0', '9'
                             if (fractionalPart) {
-                                value = value + (Float)(c - 48) / fractionalValue // '0'
+                                value = value + (Double)(c - 48) / fractionalValue // '0'
                                 fractionalValue *= 10.0
                             } else {
-                                value = value * 10 + (Float)(c - 48) // '0'
+                                value = value * 10 + (Double)(c - 48) // '0'
                             }
                         }
                         if (c == 46) { // '.'
@@ -305,9 +338,7 @@ public class Laba {
             // execute the action?
             if (action != 32) { // ' '
                 if (InitActions[action] != nil) {
-                    
                     combinedActions[currentPipeIdx][currentActionIdx] = LabaAction(action, target, invertNextOperator, value, easingAction, easingName)
-                    //combinedActions [currentPipeIdx, currentActionIdx] = new LabaAction (action, rectTransform, invertNextOperator, value, easingAction, easingName)
                     currentActionIdx += 1
                 } else {
                     if (action == 101) { // 'e'
@@ -329,31 +360,183 @@ public class Laba {
     
     
     
-    private func AnimateOne(target:UIView, animationString:[Int8], onComplete:(()->Void)?) {
-        let actionList = ParseAnimationString (target, animationString)
+    
+    private func AnimateOne(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
+        var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
+        let durationAction1 : Int8 = 100 // 'd'
+        let durationAction2 : Int8 = 68 // 'D'
+        let loopAction1 : Int8 = 76 // 'L'
+        let loopAction2 : Int8 = 108 // 'l'
         
-        print(actionList)
+        var numOfPipes : Int = 0
+        
+        var duration : Double = 0.0
+        var looping : Double = 1.0
+        var loopingRelative = false
+        for i in 0..<kMaxPipes {
+            if (actionList [i][0].performAction != nil) {
+                numOfPipes += 1
+                
+                var durationForPipe : Double = kDefaultDuration
+                for j in 0..<kMaxActions {
+                    if (actionList [i][j].operatorChar == durationAction1 || actionList [i][j].operatorChar == durationAction2) {
+                        durationForPipe = actionList [i][j].fromValue
+                    }
+                    if (actionList [i][j].operatorChar == loopAction1) {
+                        looping = actionList [i][j].fromValue
+                    }
+                    if (actionList [i][j].operatorChar == loopAction2) {
+                        loopingRelative = true
+                        looping = actionList [i][j].fromValue
+                    }
+                }
+                duration += durationForPipe
+            }
+        }
+        
+        
+        let GenerateTweenOperations : ((Bool,Int,Double,(()->Void)?)->Void) = { (loopRelative, pipeIdx, duration, onComplete) in
+            if (loopRelative) {
+                var lastV : Double = 1.0
+                
+                MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                    if (period.progress < lastV) {
+                        for j in 0..<self.kMaxActions {
+                            if !actionList [pipeIdx][j].Reset() {
+                                break
+                            }
+                        }
+                    }
+                    lastV = period.progress
+                    for i in 0..<self.kMaxActions {
+                        if (!actionList [pipeIdx][i].Perform(period.progress)) {
+                            break;
+                        }
+                    }
+                }, completeBlock: { () in
+                    if onComplete != nil {
+                        onComplete?()
+                    }
+                }))
+                
+                // todo: .setLoopCount ((int)looping);
+            } else {
+                for j in 0..<self.kMaxActions {
+                    if !actionList [pipeIdx][j].Reset() {
+                        break
+                    }
+                }
+                MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                    for i in 0..<self.kMaxActions {
+                        if (!actionList [pipeIdx][i].Perform(period.progress)) {
+                            break;
+                        }
+                    }
+                }, completeBlock: { () in
+                    if onComplete != nil {
+                        onComplete?()
+                    }
+                }))
+                // todo: .setLoopCount ((int)looping);
+            }
+        }
+        
+        
+        // having only a single pipe makes things much more efficient, so treat it separately
+        if (numOfPipes == 1) {
+            GenerateTweenOperations(loopingRelative, 0, duration, onComplete)
+        } else {
+            
+            var nextAction : (()->Void)? = nil
+            
+            for pipeIdx in stride(from: numOfPipes-1, to: -1, by: -1) {
+                
+                var durationForPipe : Double = kDefaultDuration
+                var loopingForPipe : Double = 1.0
+                var loopingRelativeForPipe : Bool = false
+                
+                for j in 0..<kMaxActions {
+                    if (actionList [pipeIdx][j].operatorChar == durationAction1 || actionList [pipeIdx][j].operatorChar == durationAction2) {
+                        durationForPipe = actionList [pipeIdx][j].fromValue
+                    }
+                    if (actionList [pipeIdx][j].operatorChar == loopAction1) {
+                        loopingForPipe = actionList [pipeIdx][j].fromValue
+                    }
+                    if (actionList [pipeIdx][j].operatorChar == loopAction2) {
+                        loopingRelativeForPipe = true
+                        loopingForPipe = actionList [pipeIdx][j].fromValue
+                    }
+                }
+                
+                var localNextAction = nextAction
+                if (localNextAction == nil) {
+                    localNextAction = onComplete
+                }
+                if (localNextAction == nil) {
+                    localNextAction = { () in }
+                }
+                
+                nextAction = { () in
+                    GenerateTweenOperations(loopingRelativeForPipe, pipeIdx, durationForPipe, localNextAction)
+                }
+            
+            }
+            
+            if nextAction != nil {
+                nextAction? ()
+            } else {
+                if onComplete != nil {
+                    onComplete? ()
+                }
+            }
+            
+        }
+        
+        
     }
     
     
     public func Animate(target:UIView, animationString:String, onComplete:(()->Void)?) {
-        let animationAsciiString : [Int8] = animationString.asciiArray8
-    
-        AnimateOne(target:target, animationString:animationAsciiString, onComplete:onComplete)
+        var localOnComplete = onComplete
+        var animationAsciiString : [Int8] = animationString.asciiArray8
+        var isMultipleAnimations = false
         
-        /*
-        if (animationString.Contains ("[")) {
-        string[] parts = animationString.Replace ('[', ' ').Split (']');
-        foreach (string part in parts) {
-                    if (part.Length > 0) {
-        AnimateOne (rectTransform, part, onComplete);
-        onComplete = null;
-                    }
+        for i in 0..<animationAsciiString.count {
+            if animationAsciiString[i] == 91 { // '['
+                isMultipleAnimations = true
+                break
+            }
         }
+        
+        if isMultipleAnimations {
+            // replace all '[' with ' '.  for all ']', insert 0
+            for i in 0..<animationAsciiString.count {
+                if animationAsciiString[i] == 91 { // '['
+                    animationAsciiString[i] = 32
+                }
+                if animationAsciiString[i] == 93 { // ']'
+                    animationAsciiString[i] = 0
+                }
+            }
+            
+            // animate each part individiually
+            for i in 0..<animationAsciiString.count {
+                
+                if animationAsciiString[i] == 0 {
+                    
+                    for j in 0..<animationAsciiString.count {
+                        if animationAsciiString[j] == 0 {
+                            AnimateOne(target, animationAsciiString, i+1, j, localOnComplete)
+                            localOnComplete = nil
+                        }
+                    }
+                    
+                }
+            }
+            
         } else {
-        AnimateOne (rectTransform, animationString, onComplete);
-        onComplete = null;
-        }*/
+            AnimateOne(target, animationAsciiString, 0, animationAsciiString.count, onComplete)
+        }
     }
     
     
@@ -378,14 +561,71 @@ public class Laba {
     
     
     private var allEasings : [EasingAction] = [
-        easeLinear
+        MKTweenTiming.Linear,
+        MKTweenTiming.BackIn,
+        MKTweenTiming.BackOut,
+        MKTweenTiming.BackInOut,
+        MKTweenTiming.BounceIn,
+        MKTweenTiming.BounceOut,
+        MKTweenTiming.BounceInOut,
+        MKTweenTiming.CircleIn,
+        MKTweenTiming.CircleOut,
+        MKTweenTiming.CircleInOut,
+        MKTweenTiming.CubicIn,
+        MKTweenTiming.CubicOut,
+        MKTweenTiming.CubicInOut,
+        MKTweenTiming.ElasticIn,
+        MKTweenTiming.ElasticOut,
+        MKTweenTiming.ElasticInOut,
+        MKTweenTiming.ExpoIn,
+        MKTweenTiming.ExpoOut,
+        MKTweenTiming.ExpoInOut,
+        MKTweenTiming.QuadIn,
+        MKTweenTiming.QuadOut,
+        MKTweenTiming.QuadInOut,
+        MKTweenTiming.QuartIn,
+        MKTweenTiming.QuartOut,
+        MKTweenTiming.QuartInOut,
+        MKTweenTiming.QuintIn,
+        MKTweenTiming.QuintOut,
+        MKTweenTiming.QuintInOut,
+        MKTweenTiming.SineIn,
+        MKTweenTiming.SineOut,
+        MKTweenTiming.SineInOut
     ]
     
     private var allEasingsByName : [String] = [
-        "ease linear"
+        "ease linear",
+        "ease back in",
+        "ease back out",
+        "ease back in/out",
+        "ease bounce in",
+        "ease bounce out",
+        "ease bounce in/out",
+        "ease circle in",
+        "ease circle out",
+        "ease circle in/out",
+        "ease cubic in",
+        "ease cubic out",
+        "ease cubic in/out",
+        "ease elastic in",
+        "ease elastic out",
+        "ease elastic in/out",
+        "ease expo in",
+        "ease expo out",
+        "ease expo in/out",
+        "ease quad in",
+        "ease quad out",
+        "ease quad in/out",
+        "ease quart in",
+        "ease quart out",
+        "ease quart in/out",
+        "ease quint in",
+        "ease quint out",
+        "ease quint in/out",
+        "ease sine in",
+        "ease sine out",
+        "ease sine in/out",
     ]
     
-    private static var easeLinear : EasingAction = { (from, to, v) in
-        return (to - from) * v + from
-    }
 }

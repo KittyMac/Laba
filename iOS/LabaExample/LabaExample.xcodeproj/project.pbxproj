@@ -12,8 +12,23 @@
 		461A05A51ED32E9C00081AA5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 461A05A31ED32E9C00081AA5 /* Main.storyboard */; };
 		461A05A71ED32E9C00081AA5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 461A05A61ED32E9C00081AA5 /* Assets.xcassets */; };
 		461A05AA1ED32E9C00081AA5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 461A05A81ED32E9C00081AA5 /* LaunchScreen.storyboard */; };
+		463D6A261ED390C00027C8FF /* MKTween.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 463D6A1D1ED38FBB0027C8FF /* MKTween.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		465427911ED32F16004F10C0 /* Laba.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 465427901ED32F16004F10C0 /* Laba.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		463D6A271ED390C00027C8FF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				463D6A261ED390C00027C8FF /* MKTween.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		461A059C1ED32E9C00081AA5 /* LabaExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LabaExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -23,6 +38,7 @@
 		461A05A61ED32E9C00081AA5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		461A05A91ED32E9C00081AA5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		461A05AB1ED32E9C00081AA5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		463D6A1D1ED38FBB0027C8FF /* MKTween.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MKTween.framework; path = ../MKTween/Frameworks/MKTween.framework; sourceTree = "<group>"; };
 		465427901ED32F16004F10C0 /* Laba.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Laba.framework; path = "../build/Debug-iphoneos/Laba.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -71,6 +87,7 @@
 		4654278F1ED32F16004F10C0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				463D6A1D1ED38FBB0027C8FF /* MKTween.framework */,
 				465427901ED32F16004F10C0 /* Laba.framework */,
 			);
 			name = Frameworks;
@@ -86,6 +103,7 @@
 				461A05981ED32E9C00081AA5 /* Sources */,
 				461A05991ED32E9C00081AA5 /* Frameworks */,
 				461A059A1ED32E9C00081AA5 /* Resources */,
+				463D6A271ED390C00027C8FF /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -274,7 +292,6 @@
 		461A05AF1ED32E9C00081AA5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = A2ZC39N8TE;
 				INFOPLIST_FILE = LabaExample/Info.plist;
@@ -288,7 +305,6 @@
 		461A05B01ED32E9C00081AA5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = A2ZC39N8TE;
 				INFOPLIST_FILE = LabaExample/Info.plist;

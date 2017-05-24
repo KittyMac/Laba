@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		463D6A281ED390D10027C8FF /* MKTween.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 463D6A171ED38F300027C8FF /* MKTween.framework */; };
 		46BBCB341ED32E10008EE4F3 /* Laba.h in Headers */ = {isa = PBXBuildFile; fileRef = 46BBCB321ED32E10008EE4F3 /* Laba.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		46D779F21ED32E4700346C83 /* Laba.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D779F11ED32E4700346C83 /* Laba.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		463D6A171ED38F300027C8FF /* MKTween.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MKTween.framework; path = MKTween/Frameworks/MKTween.framework; sourceTree = "<group>"; };
 		46BBCB2F1ED32E10008EE4F3 /* Laba.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Laba.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		46BBCB321ED32E10008EE4F3 /* Laba.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Laba.h; sourceTree = "<group>"; };
 		46BBCB331ED32E10008EE4F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -23,17 +25,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				463D6A281ED390D10027C8FF /* MKTween.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		463D6A161ED38F300027C8FF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				463D6A171ED38F300027C8FF /* MKTween.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		46BBCB251ED32E10008EE4F3 = {
 			isa = PBXGroup;
 			children = (
 				46BBCB311ED32E10008EE4F3 /* Laba */,
 				46BBCB301ED32E10008EE4F3 /* Products */,
+				463D6A161ED38F300027C8FF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -255,6 +267,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MKTween/Frameworks",
+				);
 				INFOPLIST_FILE = Laba/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -277,6 +293,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MKTween/Frameworks",
+				);
 				INFOPLIST_FILE = Laba/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
