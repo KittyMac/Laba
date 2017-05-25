@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "EF2CD48E9D3B9328C7FEE7A2592D95CEA4A8F84C",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "EF2CD48E9D3B9328C7FEE7A2592D95CEA4A8F84C" : 9223372036854775807,
+    "55B1FFFAEBA88721E9A788AD577F1620D8C1C861" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "146B07F7-480D-443E-9C52-00114E44A829",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "EF2CD48E9D3B9328C7FEE7A2592D95CEA4A8F84C" : "Laba\/",
+    "55B1FFFAEBA88721E9A788AD577F1620D8C1C861" : "Laba\/iOS\/MKTween\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Laba",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "iOS\/Laba.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/KittyMac\/MKTween",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "55B1FFFAEBA88721E9A788AD577F1620D8C1C861"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/KittyMac\/Laba",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "EF2CD48E9D3B9328C7FEE7A2592D95CEA4A8F84C"
+    }
+  ]
+}
