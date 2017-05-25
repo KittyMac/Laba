@@ -15,7 +15,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         
-        let labaString = "s0.2|f0|f1|<100|v100|>100|^100|y360|p360|r360"
+        let labaString = "[s0.2][f0]"
         
         Laba.shared.Animate(target: self.view, animationString: labaString, onComplete: nil)
         

@@ -925,7 +925,7 @@ public class Laba {
             // animate each part individiually
             for i in 0..<animationAsciiString.count {
                 
-                if animationAsciiString[i] == 0 {
+                if i == 0 || animationAsciiString[i] == 0 {
                     
                     for j in 0..<animationAsciiString.count {
                         if animationAsciiString[j] == 0 {
