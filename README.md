@@ -1,3 +1,6 @@
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+
+
 # Laba
 
 Labanotiation is a notation system designed to record and analyze human movement (its a written language for dance). Laba is a **minimalistic notation system designed for choreographing UI animations**. Laba allows you to express simple (or even complex) combinations and sequences of animations in a tightly defined string, which can then be parsed and driven by your applications animation engine of choice.
