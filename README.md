@@ -8,6 +8,7 @@ Labanotiation is a notation system designed to record and analyze human movement
 How you might choose to integrate Laba into your environment is your choice. As of this writing, this Laba repository supports the following:
 
 * Unity3D (requires LeanTween)
+* iOS (Swift framework, requires MKTween)
 
 ## Syntax
 
@@ -89,6 +90,15 @@ This Laba notation will move the target in from the left and end at its current 
 `d0.2` This sets the duration of this sequence to finish in 0.2 seconds.
 
 
+
+
+
+## Carthage
+
+For easy integration into your iOS project we support Carthage. Laba is also dependent on MKTween, so here is an example Cartfile:
+
+	github "KittyMac/Laba" "ios"
+	github "KittyMac/MKTween" "master"
 
 
 
