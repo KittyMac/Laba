@@ -234,6 +234,298 @@ public class Laba {
         // ************
         
         
+        // *** MOVE LEFT ***
+        RegisterOperation(
+            "<",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.bounds.size.width)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.origin.x)
+                    action.toValue = Double(action.target!.frame.origin.x) - action.rawValue
+                }else{
+                    action.fromValue = Double(action.target!.frame.origin.x) + action.rawValue
+                    action.toValue = Double(action.target!.frame.origin.x)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.origin.x = CGFloat(v)
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move left \(action.rawValue) units, ")
+                } else {
+                    description.append("move in from left \(action.rawValue) units, ")
+                }
+        })
+        // ************
+        
+        
+        // *** MOVE RIGHT ***
+        RegisterOperation(
+            ">",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.bounds.size.width)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.origin.x)
+                    action.toValue = Double(action.target!.frame.origin.x) + action.rawValue
+                }else{
+                    action.fromValue = Double(action.target!.frame.origin.x) - action.rawValue
+                    action.toValue = Double(action.target!.frame.origin.x)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.origin.x = CGFloat(v)
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move right \(action.rawValue) units, ")
+                } else {
+                    description.append("move in from right \(action.rawValue) units, ")
+                }
+        })
+        // ************
+        
+        
+        // *** MOVE UP ***
+        RegisterOperation(
+            "^",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.bounds.size.height)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.origin.y)
+                    action.toValue = Double(action.target!.frame.origin.y) - action.rawValue
+                }else{
+                    action.fromValue = Double(action.target!.frame.origin.y) + action.rawValue
+                    action.toValue = Double(action.target!.frame.origin.y)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.origin.y = CGFloat(v)
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move up \(action.rawValue) units, ")
+                } else {
+                    description.append("move in from above \(action.rawValue) units, ")
+                }
+        })
+        // ************
+        
+        
+        // *** MOVE DOWN ***
+        RegisterOperation(
+            "v",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.bounds.size.height)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.origin.y)
+                    action.toValue = Double(action.target!.frame.origin.y) + action.rawValue
+                }else{
+                    action.fromValue = Double(action.target!.frame.origin.y) - action.rawValue
+                    action.toValue = Double(action.target!.frame.origin.y)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.origin.y = CGFloat(v)
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move down \(action.rawValue) units, ")
+                } else {
+                    description.append("move in from below \(action.rawValue) units, ")
+                }
+        })
+        // ************
+        
+        
+        // *** UNIFORM SCALE ***
+        RegisterOperation(
+            "s",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 1.0
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.layer.transform.m11)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = (action.rawValue > 0.5 ? 0.0 : 1.0)
+                    action.toValue = action.rawValue
+                }
+        },
+            { (view, v, action) in
+                action.target!.layer.transform.m11 = CGFloat(v)
+                action.target!.layer.transform.m22 = CGFloat(v)
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("scale to \(Int(action.rawValue*100))%, ")
+                } else {
+                    description.append("scale in from \(Int(action.rawValue*100))%, ")
+                }
+        })
+        // ************
+        
+        
+        // *** WIDTH ***
+        RegisterOperation(
+            "w",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.frame.size.width)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.size.width)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = action.rawValue
+                    action.toValue = Double(action.target!.frame.size.width)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.size.width = CGFloat(v)
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("width to \(Int(action.rawValue*100))%, ")
+                } else {
+                    description.append("width in from \(Int(action.rawValue*100))%, ")
+                }
+        })
+        // ************
+        
+        
+        // *** HEIGHT ***
+        RegisterOperation(
+            "h",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = Double(action.target!.frame.size.height)
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.frame.size.height)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = action.rawValue
+                    action.toValue = Double(action.target!.frame.size.height)
+                }
+        },
+            { (view, v, action) in
+                action.target!.frame.size.height = CGFloat(v)
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("height to \(action.rawValue) units, ")
+                } else {
+                    description.append("height in from \(action.rawValue) units, ")
+                }
+        })
+        // ************
+        
+        
+        
+        // *** ROLL ***
+        RegisterOperation(
+            "r",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 0.0
+                }
+                
+                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.z") as! Double
+                if(action.inverse == false){
+                    action.fromValue = currentRotation
+                    action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
+                }else{
+                    action.fromValue = currentRotation + self.degreesToRadians(action.rawValue)
+                    action.toValue = currentRotation
+                }
+        },
+            { (view, v, action) in
+                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.z")
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("rotate around z by \(action.rawValue)°, ")
+                } else {
+                    description.append("rotate in from around z by \(action.rawValue)°, ")
+                }
+        })
+        // ************
+        
+        // *** PITCH ***
+        RegisterOperation(
+            "p",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 0.0
+                }
+                
+                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.x") as! Double
+                if(action.inverse == false){
+                    action.fromValue = currentRotation
+                    action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
+                }else{
+                    action.fromValue = currentRotation + self.degreesToRadians(action.rawValue)
+                    action.toValue = currentRotation
+                }
+        },
+            { (view, v, action) in
+                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.x")
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("rotate around x by \(action.rawValue)°, ")
+                } else {
+                    description.append("rotate in from around x by \(action.rawValue)°, ")
+                }
+        })
+        // ************
+        
+        // *** YAW ***
+        RegisterOperation(
+            "y",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 0.0
+                }
+                
+                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.y") as! Double
+                if(action.inverse == false){
+                    action.fromValue = currentRotation
+                    action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
+                }else{
+                    action.fromValue = currentRotation + self.degreesToRadians(action.rawValue)
+                    action.toValue = currentRotation
+                }
+        },
+            { (view, v, action) in
+                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.y")
+                action.target!.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("rotate around y by \(action.rawValue)°, ")
+                } else {
+                    description.append("rotate in from around y by \(action.rawValue)°, ")
+                }
+        })
+        // ************
+        
+        
         // *** FADE ***
         RegisterOperation(
             "f",
@@ -254,9 +546,9 @@ public class Laba {
         },
             { (description, action) in
                 if(action.inverse == false) {
-                    description.append("fade to \(Int(action.rawValue*100))%")
+                    description.append("fade to \(Int(action.rawValue*100))%, ")
                 } else {
-                    description.append("fade from \(Int(action.fromValue * 100))% to \(action.toValue * 100)%")
+                    description.append("fade from \(Int(action.fromValue * 100))% to \(action.toValue * 100)%, ")
                 }
         })
         // ************
@@ -463,7 +755,9 @@ public class Laba {
             }
         )
         
-        print(sb!.replacingOccurrences(of: "  ", with: " ").replacingOccurrences(of: "  ", with: " "))
+        print(sb!.replacingOccurrences(of: "  ", with: " ").replacingOccurrences(of: "  ", with: " ").replacingOccurrences(of: "  ", with: " "))
+        
+        sb = nil
     }
     
     
@@ -752,4 +1046,12 @@ public class Laba {
         "ease sine in/out",
     ]
     
+    
+    func degreesToRadians(_ degrees: Double) -> Double {
+        return degrees * Double.pi / 180
+    }
+    
+    func radiansToDegress(_ radians: Double) -> Double {
+        return radians * 180 / Double.pi
+    }
 }

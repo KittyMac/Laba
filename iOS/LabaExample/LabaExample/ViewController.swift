@@ -15,9 +15,11 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         
-        Laba.shared.Animate(target: self.view, animationString: "f0|f1|d3f0|d3f1", onComplete: nil)
+        let labaString = "s0.2|f0|f1|<100|v100|>100|^100|y360|p360|r360"
         
-        Laba.shared.Describe(target: self.view, animationString: "f0|f1|d3f0|d3f1")
+        Laba.shared.Animate(target: self.view, animationString: labaString, onComplete: nil)
+        
+        Laba.shared.Describe(target: self.view, animationString: labaString)
         
     }
 
