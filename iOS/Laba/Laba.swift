@@ -202,6 +202,38 @@ public class Laba {
         DescribeActions = [Int8: DescribeAction]()
         
         
+        // *** LOOP ABSOLUTE ***
+        RegisterOperation(
+            "L",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = -1
+                }
+                action.fromValue = action.rawValue
+                action.toValue = action.rawValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
+        
+        
+        // *** LOOP RELATIVE ***
+        RegisterOperation(
+            "l",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = -1
+                }
+                action.fromValue = action.rawValue
+                action.toValue = action.rawValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
+        
+        
         // *** DURATION ***
         RegisterOperation(
             "d",
@@ -689,13 +721,13 @@ public class Laba {
         
         sb = nil
         
-        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, pipeIdx, duration, onComplete) in
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, onComplete) in
                 var localActionList:[[LabaAction]] = actionList
-                
+            
                 if (loopRelative) {
                     var lastV : Double = 1.0
                     
-                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), loops:looping), updateBlock: { (period) -> () in
                         if (period.progress < lastV) {
                             for j in 0..<self.kMaxActions {
                                 if !localActionList [pipeIdx][j].Reset() {
@@ -722,7 +754,7 @@ public class Laba {
                             break
                         }
                     }
-                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale)), updateBlock: { (period) -> () in
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), loops:looping), updateBlock: { (period) -> () in
                         for i in 0..<self.kMaxActions {
                             if (!localActionList [pipeIdx][i].Perform(period.progress)) {
                                 break
@@ -745,7 +777,7 @@ public class Laba {
         
         sb = ""
         
-        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, pipeIdx, duration, onComplete) in
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, onComplete) in
                 var localActionList:[[LabaAction]] = actionList
                 for i in 0..<self.kMaxActions {
                     if !localActionList [pipeIdx][i].Describe (&self.sb!) {
@@ -761,7 +793,7 @@ public class Laba {
     }
     
     
-    private func SharedProcessIndividualLabaString(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Double,(()->Void)?)->Void)) {
+    private func SharedProcessIndividualLabaString(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,(()->Void)?)->Void)) {
         var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
         let durationAction1 : Int8 = 100 // 'd'
         let durationAction2 : Int8 = 68 // 'D'
@@ -771,7 +803,7 @@ public class Laba {
         var numOfPipes : Int = 0
         
         var duration : Double = 0.0
-        var looping : Double = 1.0
+        var looping : Int = 1
         var loopingRelative = false
         for i in 0..<kMaxPipes {
             if (actionList [i][0].performAction != nil) {
@@ -783,11 +815,11 @@ public class Laba {
                         durationForPipe = actionList [i][j].fromValue
                     }
                     if (actionList [i][j].operatorChar == loopAction1) {
-                        looping = actionList [i][j].fromValue
+                        looping = Int(actionList [i][j].fromValue)
                     }
                     if (actionList [i][j].operatorChar == loopAction2) {
                         loopingRelative = true
-                        looping = actionList [i][j].fromValue
+                        looping = Int(actionList [i][j].fromValue)
                     }
                 }
                 duration += durationForPipe
@@ -802,14 +834,14 @@ public class Laba {
         // having only a single pipe makes things much more efficient, so treat it separately
         if (numOfPipes == 1) {
             
-            processOperation(actionList, loopingRelative, 0, duration, onComplete)
+            processOperation(actionList, loopingRelative, looping, 0, duration, onComplete)
             
             if sb != nil {
                 
                 if  looping > 1 {
-                    sb!.append(" \(looping) repeating \(loopingRelative) times, ")
+                    sb!.append(" repeating \(looping) times, ")
                 } else if (looping == -1) {
-                    sb!.append(" \(loopingRelative) repeating forever, ")
+                    sb!.append(" repeating forever, ")
                 }
                 
                 if oldDescriptionHash != sb?.hash {
@@ -831,7 +863,7 @@ public class Laba {
             for pipeIdx in stride(from: numOfPipes-1, to: -1, by: -1) {
                 
                 var durationForPipe : Double = kDefaultDuration
-                var loopingForPipe : Double = 1.0
+                var loopingForPipe : Int = 1
                 var loopingRelativeForPipe : Bool = false
                 
                 for j in 0..<kMaxActions {
@@ -839,11 +871,11 @@ public class Laba {
                         durationForPipe = actionList [pipeIdx][j].fromValue
                     }
                     if (actionList [pipeIdx][j].operatorChar == loopAction1) {
-                        loopingForPipe = actionList [pipeIdx][j].fromValue
+                        loopingForPipe = Int(actionList [pipeIdx][j].fromValue)
                     }
                     if (actionList [pipeIdx][j].operatorChar == loopAction2) {
                         loopingRelativeForPipe = true
-                        loopingForPipe = actionList [pipeIdx][j].fromValue
+                        loopingForPipe = Int(actionList [pipeIdx][j].fromValue)
                     }
                 }
                 
@@ -856,13 +888,13 @@ public class Laba {
                 }
                 
                 nextAction = { () in
-                    processOperation(actionList, loopingRelativeForPipe, pipeIdx, durationForPipe, localNextAction)
+                    processOperation(actionList, loopingRelativeForPipe, loopingForPipe, pipeIdx, durationForPipe, localNextAction)
                     
                     if self.sb != nil {
                         if  loopingForPipe > 1 {
-                            self.sb!.append(" \(loopingForPipe) repeating \(loopingRelativeForPipe) times, ")
+                            self.sb!.append(" repeating \(loopingForPipe) times, ")
                         } else if (loopingForPipe == -1) {
-                            self.sb!.append(" \(loopingRelativeForPipe) repeating forever, ")
+                            self.sb!.append(" repeating forever, ")
                         }
                         
                         if oldDescriptionHash != self.sb?.hash {
