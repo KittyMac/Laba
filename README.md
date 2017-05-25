@@ -30,6 +30,8 @@ What the animation described by your Laba notation applies to will be specific t
 `f` alpha fade  
 
 `s` uniform scale  
+`w` width  
+`h` height  
 
 `r` roll / z rotation  
 `p` pitch / x rotation  
