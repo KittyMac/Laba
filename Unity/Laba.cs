@@ -499,6 +499,8 @@ public class Laba : MonoBehaviour {
 			AnimateOne (rectTransform, animationString, onComplete);
 			onComplete = null;
 		}
+
+		LeanTween.update ();
 	}
 
 
