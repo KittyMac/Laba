@@ -4,6 +4,9 @@ using UnityEngine;
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  * 
+ * x move to x position
+ * y move to y position
+ * 
  * < move left
  * > move right
  * ^ move up
@@ -173,6 +176,33 @@ public class Laba : MonoBehaviour {
 		}
 	}
 
+
+	// these are here for convenience; use autocomplete to quickly look up the number of your easing function
+	public const int linear = 0;
+	public const int easeOutQuad = 1;
+	public const int easeInQuad = 2;
+	public const int easeInOutQuad = 3;
+	public const int easeInCubic = 4;
+	public const int easeOutCubic = 5;
+	public const int easeInOutCubic = 6;
+	public const int easeInQuart = 7;
+	public const int easeOutQuart = 8;
+	public const int easeInOutQuart = 9;
+	public const int easeInQuint = 10;
+	public const int easeOutQuint = 11;
+	public const int easeInOutQuint = 12;
+	public const int easeInSine = 13;
+	public const int easeOutSine = 14;
+	public const int easeInOutSine = 15;
+	public const int easeInExpo = 16;
+	public const int easeOutExpo = 17;
+	public const int easeInOutExpo = 18;
+	public const int easeInCirc = 19;
+	public const int easeOutCirc = 20;
+	public const int easeInOutCirc = 21;
+	public const int easeInBounce = 22;
+	public const int easeOutBounce = 23;
+	public const int easeInOutBounce = 24;
 
 	private static EasingAction[] allEasings = new EasingAction[] {
 		LeanTween.linear, 
@@ -734,6 +764,69 @@ public class Laba : MonoBehaviour {
 			(sb, action) => { }
 		);
 		#endregion
+
+
+		#region MOVE TO X POSITION
+		RegisterOperation(
+			'x',
+			(newAction) => {
+				if (newAction.rawValue == LabaDefaultValue) {
+					newAction.rawValue = 0;
+				}
+
+				if(newAction.inverse == false){
+					newAction.fromValue = newAction.target.anchoredPosition.x;
+					newAction.toValue = newAction.rawValue;
+				}else{
+					newAction.fromValue = newAction.rawValue;
+					newAction.toValue = newAction.target.anchoredPosition.x;
+				}
+				return newAction;
+			},
+			(rt, v, action) => {
+				rt.anchoredPosition = new Vector2 (v, rt.anchoredPosition.y);
+			},
+			(sb, action) => { 
+				if(action.inverse == false) {
+					sb.AppendFormat("move to {0} x pos, ", action.rawValue); 
+				} else {
+					sb.AppendFormat("move from {0} x pos, ", action.rawValue); 
+				}
+			}
+		);
+		#endregion
+
+		#region MOVE TO Y POSITION
+		RegisterOperation(
+			'y',
+			(newAction) => {
+				if (newAction.rawValue == LabaDefaultValue) {
+					newAction.rawValue = 0;
+				}
+
+				if(newAction.inverse == false){
+					newAction.fromValue = newAction.target.anchoredPosition.y;
+					newAction.toValue = newAction.rawValue;
+				}else{
+					newAction.fromValue = newAction.rawValue;
+					newAction.toValue = newAction.target.anchoredPosition.y;
+				}
+				return newAction;
+			},
+			(rt, v, action) => {
+				rt.anchoredPosition = new Vector2 (rt.anchoredPosition.x, v);
+			},
+			(sb, action) => { 
+				if(action.inverse == false) {
+					sb.AppendFormat("move to {0} y pos, ", action.rawValue); 
+				} else {
+					sb.AppendFormat("move from {0} y pos, ", action.rawValue); 
+				}
+			}
+		);
+		#endregion
+
+
 
 		#region MOVE LEFT
 		RegisterOperation(
