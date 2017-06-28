@@ -2,18 +2,21 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  * 
+ * NOTE: As of right now staggaered duration (D) and all looping (l and L) are not supported in LabaForms
+ * 
  * < move left
  * > move right
  * ^ move up
  * v move down
+ * 
+ * x move to x position
+ * y move to y position
  * 
  * f alpha fade
  * 
  * s uniform scale
  * 
  * r roll
- * p pitch
- * y yaw
  * 
  * d duration for current pipe
  * 
