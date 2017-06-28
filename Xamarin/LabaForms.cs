@@ -2,7 +2,7 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  * 
- * NOTE: As of right now staggaered duration (D) and all looping (l and L) are not supported in LabaForms
+ * NOTE: As of right now staggaered duration (D) is not supported in LabaForms
  * 
  * < move left
  * > move right
@@ -321,6 +321,7 @@ public class LabaForms : Object {
 			if (loopingRelative) {
 				double lastV = 1.0f;
 
+                int localLoops = (int)looping;
                 new Animation((v) =>
                 {
                     if (v < lastV)
@@ -347,6 +348,11 @@ public class LabaForms : Object {
                     {
                         onComplete();
                     }
+                }, () => {
+                    if (localLoops < 0)
+                        return true;
+                    localLoops--;
+                    return localLoops > 0;
                 });
 			} else {
 				for (int j = 0; j < kMaxActions; j++) {
@@ -354,6 +360,8 @@ public class LabaForms : Object {
 						break;
 					}
 				}
+
+                int localLoops = (int)looping;
 				new Animation((v) =>
 				{
 					for (int i = 0; i < kMaxActions; i++)
@@ -369,6 +377,12 @@ public class LabaForms : Object {
 					{
 						onComplete();
 					}
+				}, () =>
+				{
+					if (localLoops < 0)
+						return true; 
+					localLoops--;
+					return localLoops > 0;
 				});
 			}
 		} else {
@@ -409,6 +423,7 @@ public class LabaForms : Object {
 					if (loopingRelativeForPipe) {
 						double lastV = 1.0f;
 
+                        int localLoops = (int)loopingForPipe;
                         new Animation((v) =>
 						{
 							if (v < lastV)
@@ -435,6 +450,10 @@ public class LabaForms : Object {
 							{
 								localNextAction();
 							}
+						}, () =>
+						{
+							localLoops--;
+							return localLoops > 0;
 						});
 					} else {
 						for (int j = 0; j < kMaxActions; j++) {
@@ -443,6 +462,7 @@ public class LabaForms : Object {
 							}
 						}
 
+                        int localLoops = (int)loopingForPipe;
 						new Animation((v) =>
 						{
 							for (int j = 0; j < kMaxActions; j++)
@@ -458,6 +478,10 @@ public class LabaForms : Object {
 							{
 								localNextAction();
 							}
+						}, () =>
+						{
+							localLoops--;
+							return localLoops > 0;
 						});
 					}
 
