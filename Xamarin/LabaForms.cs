@@ -2,7 +2,7 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  * 
- * NOTE: As of right now staggaered duration (D) is not supported in LabaForms
+ * NOTE: Implied values for <v>^ are currently squirrely for Xamarin Forms and won't work prior to the views being laid out (as width/height are -1)
  * 
  * < move left
  * > move right
@@ -745,7 +745,21 @@ public class LabaForms : Object {
 				if (newAction.rawValue == LabaDefaultValue) {
 					newAction.rawValue = kDefaultDuration;
 				}
-                int siblingIndex = 0; // TODO: how to get in forms?
+
+                // find the ancestral layout?
+                int siblingIndex = 0;
+
+				// TODO: how to get in forms? This seems pretty heavy handed
+				ILayoutController parent = newAction.target.Parent as ILayoutController;
+	            if(parent != null) {
+	                for (int i = 0; i < parent.Children.Count; i++){
+	                    if(newAction.target == parent.Children[i]){
+                            siblingIndex = i;
+	                    }
+	                }
+	            }
+                
+
                 newAction.fromValue = newAction.toValue = newAction.rawValue * siblingIndex;
 				return newAction;
 			},
