@@ -322,6 +322,7 @@ public class LabaForms : Object {
 				double lastV = 1.0f;
 
                 int localLoops = (int)looping;
+                RunningAnimations++;
                 new Animation((v) =>
                 {
                     if (v < lastV)
@@ -344,6 +345,7 @@ public class LabaForms : Object {
                     }
                 }, 0.0f, 1.0f, Easing.Linear).Commit(rectTransform, "LabaAnimation", 16, (uint)(duration * timeScale * 1000), Easing.Linear, (x, y) =>
                 {
+                    RunningAnimations--;
                     if (onComplete != null)
                     {
                         onComplete();
@@ -362,6 +364,7 @@ public class LabaForms : Object {
 				}
 
                 int localLoops = (int)looping;
+                RunningAnimations++;
 				new Animation((v) =>
 				{
 					for (int i = 0; i < kMaxActions; i++)
@@ -373,6 +376,7 @@ public class LabaForms : Object {
 					}
                 }, 0.0f, 1.0f, Easing.Linear).Commit(rectTransform, "LabaAnimation", 16, (uint)(duration * timeScale * 1000), Easing.Linear, (x, y) =>
 				{
+                    RunningAnimations--;
 					if (onComplete != null)
 					{
 						onComplete();
@@ -424,6 +428,7 @@ public class LabaForms : Object {
 						double lastV = 1.0f;
 
                         int localLoops = (int)loopingForPipe;
+                        RunningAnimations++;
                         new Animation((v) =>
 						{
 							if (v < lastV)
@@ -446,6 +451,7 @@ public class LabaForms : Object {
 							}
 						}, 0.0f, 1.0f, Easing.Linear).Commit(rectTransform, "LabaAnimation", 16, (uint)(durationForPipe * timeScale * 1000), Easing.Linear, (x, y) =>
 						{
+                            RunningAnimations--;
 							if (localNextAction != null)
 							{
 								localNextAction();
@@ -463,6 +469,7 @@ public class LabaForms : Object {
 						}
 
                         int localLoops = (int)loopingForPipe;
+                        RunningAnimations++;
 						new Animation((v) =>
 						{
 							for (int j = 0; j < kMaxActions; j++)
@@ -474,6 +481,7 @@ public class LabaForms : Object {
 							}
 						}, 0.0f, 1.0f, Easing.Linear).Commit(rectTransform, "LabaAnimation", 16, (uint)(durationForPipe * timeScale * 1000), Easing.Linear, (x, y) =>
 						{
+                            RunningAnimations--;
 							if (localNextAction != null)
 							{
 								localNextAction();
@@ -1062,4 +1070,9 @@ public class LabaForms : Object {
 		PerformActions [charOperator] = perform;
 		DescribeActions [charOperator] = describe;
 	}
+
+    static private int RunningAnimations = 0;
+    static public bool IsAnimating() {
+        return RunningAnimations > 0;
+    }
 }
