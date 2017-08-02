@@ -5,9 +5,9 @@
       location = "group:Laba/Examples.playground">
    </FileRef>
    <FileRef
-      location = "group:MKTween/MKTween.xcodeproj">
+      location = "group:Laba.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:Laba.xcodeproj">
+      location = "group:MKTween/MKTween.xcodeproj">
    </FileRef>
 </Workspace>
