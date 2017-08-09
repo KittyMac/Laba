@@ -36,6 +36,18 @@
 import Foundation
 import MKTween
 
+extension UIView {
+    public func Animate(_ animationString:String) {
+        Laba.shared.Animate(target: self, animationString: animationString, onComplete: nil)
+    }
+    public func Animate(_ animationString:String, _ onComplete:(()->Void)?) {
+        Laba.shared.Animate(target: self, animationString: animationString, onComplete: onComplete)
+    }
+    public func Describe(_ animationString:String) {
+        Laba.shared.Describe(target: self, animationString: animationString)
+    }
+}
+
 extension String {
     
     var asciiArray8: [Int8] {
