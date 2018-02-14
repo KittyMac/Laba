@@ -43,8 +43,15 @@ package com.smallplanet.labalib;
  */
 
 import android.animation.TimeInterpolator;
+import android.content.Context;
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.*;
+
+import com.learningmachine.android.app.LMApplication;
+import com.learningmachine.android.app.R;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -102,8 +109,8 @@ public class Laba {
             long currentTime = System.nanoTime();
             float t = (float) (currentTime - startTime) / (float) (endTime - startTime);
             if(endTime == startTime) {
-                t = 1.0f;
-            }
+            	t = 1.0f;
+			}
 
             if (t >= 1.0f) {
                 action.apply(1.0f, false);
@@ -111,15 +118,15 @@ public class Laba {
                 if (loopCount == -1) {
                     action.apply(0.0f, true);
                     startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000);
+                    endTime = startTime + (long) (duration * 1000000000.0f);
                     ScheduleNextUpdate();
                     return;
                 }
-                if (loopCount > 0) {
+                if (loopCount > 1) {
                     loopCount--;
                     action.apply(0.0f, true);
                     startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000);
+                    endTime = startTime + (long) (duration * 1000000000.0f);
                     ScheduleNextUpdate();
                     return;
                 }
@@ -147,12 +154,12 @@ public class Laba {
         public LabaTimer(View v, ValueAction act, float startVal, float endVal, float dura, Callback complete, int loops) {
 
             view = v;
+			loopCount = loops;
+			action = act;
+			duration = dura;
+			onComplete = complete;
             startTime = System.nanoTime();
-            endTime = startTime + (long)(duration * 1000000000);
-            loopCount = loops;
-            action = act;
-            duration = dura;
-            onComplete = complete;
+            endTime = startTime + (long)(duration * 1000000000.0f);
 
             action.apply(0.0f, true);
             Update();
@@ -234,6 +241,31 @@ public class Laba {
 		}
 	}
 
+
+	private static Context context;
+    public static void setContext(Context c) {
+    	context = c;
+	}
+
+	private static float px2dp(float px) {
+		if (context == null) {
+			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
+			return px;
+		}
+		Resources resources = context.getResources();
+		DisplayMetrics metrics = resources.getDisplayMetrics();
+		return px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+	}
+
+	private static float dp2px(float dp) {
+		if (context == null) {
+			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
+			return dp;
+		}
+		Resources resources = context.getResources();
+		DisplayMetrics metrics = resources.getDisplayMetrics();
+		return dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+	}
 
     // these are here for convenience; use autocomplete to quickly look up the number of your easing function
     public static final int linear = 0;
@@ -761,6 +793,7 @@ public class Laba {
 	}
 
 
+
 	private static void CheckInit() {
 		if (allEasings == null ){
 			allEasings = new TimeInterpolator[] {
@@ -794,9 +827,6 @@ public class Laba {
 			InitActions = new HashMap<Character, InitAction>();
 			PerformActions = new HashMap<Character, PerformAction>();
 			DescribeActions = new HashMap<Character, DescribeAction>();
-
-
-
 
 			RegisterOperation(
 					'L',
@@ -877,6 +907,8 @@ public class Laba {
                             newAction.rawValue = 0.0f;
                         }
 
+                        newAction.rawValue = dp2px(newAction.rawValue );
+
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationX();
                             newAction.toValue = newAction.rawValue;
@@ -910,6 +942,8 @@ public class Laba {
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.rawValue = 0.0f;
                         }
+
+						newAction.rawValue = dp2px(newAction.rawValue );
 
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationY();
@@ -945,6 +979,8 @@ public class Laba {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                             newAction.rawValue = (float)newAction.target.getMeasuredWidth();
                         }
+						newAction.rawValue = dp2px(newAction.rawValue );
+
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationX();
                             newAction.toValue = newAction.target.getTranslationX() - newAction.rawValue;
@@ -980,6 +1016,7 @@ public class Laba {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                             newAction.rawValue = (float)newAction.target.getMeasuredWidth();
                         }
+						newAction.rawValue = dp2px(newAction.rawValue );
 
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationX();
@@ -1015,6 +1052,7 @@ public class Laba {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                             newAction.rawValue = (float)newAction.target.getMeasuredHeight();
                         }
+						newAction.rawValue = dp2px(newAction.rawValue );
 
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationY();
@@ -1050,6 +1088,8 @@ public class Laba {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                             newAction.rawValue = (float)newAction.target.getMeasuredHeight();
                         }
+						newAction.rawValue = dp2px(newAction.rawValue );
+
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationY();
                             newAction.toValue = newAction.target.getTranslationY() + newAction.rawValue;
@@ -1057,6 +1097,7 @@ public class Laba {
                             newAction.fromValue = newAction.target.getTranslationY() - newAction.rawValue;
                             newAction.toValue = newAction.target.getTranslationY();
                         }
+
                         return newAction;
                     },
                     (rt, v, action) -> {
