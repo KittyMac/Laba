@@ -17,8 +17,14 @@
 			console.log("isNumber('a'): " + Laba.isNumber('a'))
 			console.log("isNumber('3'): " + Laba.isNumber('3'))
 			
+			
 			var elem = document.getElementById("animation"); 
-			Laba.animate(elem, "[d2x200][d1.3y200]")
+			var animation = "[x200][y200]";
+			Laba.animate(elem, animation, function() {
+				console.log(Laba.describe(elem, animation))
+			})
+			
+			
 			
 		</script>
 	</body>

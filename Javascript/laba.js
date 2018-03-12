@@ -40,6 +40,85 @@
  * 
  */
 
+function StringBuilder()
+{
+	var strings = [];
+	
+	this.length = function() {
+		var l = 0
+		for(var i = 0; i < strings.length; i++){
+			l += strings[i].length;
+		}
+		return l;
+	}
+	
+	this.setLength = function(l) {
+		// we need to collapse the strings, then trim
+		let newString = strings.join("").substring(0, l);
+		strings = [];
+		strings[0] = newString;
+	}
+	
+	this.insert = function(i, s) {
+		let newString = strings.join("");
+		strings = [];
+		strings[0] = newString.substring(0,i);
+		strings[1] = s;
+		strings[2] = newString.substring(i);
+	}
+	
+	this.delete = function(s, e) {
+		let newString = strings.join("");
+		strings = [];
+		strings[0] = newString.substring(0,s);
+		strings[1] = newString.substring(e+1);
+	}
+
+	this.append = function (string)
+	{
+		string = verify(string);
+		if (string.length > 0) strings[strings.length] = string;
+	};
+
+	this.appendLine = function (string)
+	{
+		string = verify(string);
+		if (this.isEmpty())
+		{
+			if (string.length > 0) strings[strings.length] = string;
+			else return;
+		}
+		else strings[strings.length] = string.length > 0 ? "\r\n" + string : "\r\n";
+	};
+
+	this.clear = function () { strings = []; };
+
+	this.isEmpty = function () { return strings.length == 0; };
+
+	this.toString = function () { return strings.join(""); };
+
+	var verify = function (string)
+	{
+		if (!defined(string)) return "";
+		if (getType(string) != getType(new String())) return String(string);
+		return string;
+	};
+
+	var defined = function (el)
+	{
+		// Changed per Ryan O'Hara's comment:
+		return el != null && typeof(el) != "undefined";
+	};
+
+	var getType = function (instance)
+	{
+		if (!defined(instance.constructor)) throw Error("Unexpected object type");
+		var type = String(instance.constructor).match(/function\s+(\w+)/);
+
+		return defined(type) ? type[1] : "undefined";
+	};
+};
+
 // requestAnimationFrame polyfill by Erik Möller
 // fixes from Paul Irish and Tino Zijdel
  
@@ -158,9 +237,9 @@ class _LabaAction {
 		this.easing = easing;
 		this.easingName = easingName;
 
-		this.action = laba.PerformActions[operatorChar];
-		this.describe = laba.DescribeActions[operatorChar];
-		this.init = laba.InitActions[operatorChar];
+		this._action = laba.PerformActions[operatorChar];
+		this._describe = laba.DescribeActions[operatorChar];
+		this._init = laba.InitActions[operatorChar];
 		
 		if(this.inverse == false){
 			this.fromValue = 0.0;
@@ -170,13 +249,13 @@ class _LabaAction {
 			this.toValue = 0.0;
 		}
 		
-		if(this.init != null){
-            this.init(this);
+		if(this._init != null){
+            this._init(this);
 		}
 	}
 	
 	reset(laba) {
-		if (this.init != null) {
+		if (this._init != null) {
 			var tempAction = new _LabaAction (laba, this.operatorChar, this.elem, this.inverse, this.rawValue, this.easing, this.easingName);
 			this.fromValue = tempAction.fromValue;
 			this.toValue = tempAction.toValue;
@@ -186,16 +265,16 @@ class _LabaAction {
 	}
 
 	perform(v) {
-		if (this.action != null) {
-			this.action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
+		if (this._action != null) {
+			this._action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
 			return true;
 		}
 		return false;
 	}
 
 	describe(sb) {
-		if (this.describe != null) {
-			this.describe (sb, this);
+		if (this._describe != null) {
+			this._describe (sb, this);
 			return true;
 		}
 		return false;
@@ -337,7 +416,7 @@ class _Laba {
 		return combinedActions;
 	}
 	
-	animateOne(elem, animationString, onComplete, describe) {
+	animateOne(elem, animationString, onComplete) {
 		var localThis = this;
 		var actionList = this.parseAnimationString (elem, animationString);
 		var durationAction1 = this.PerformActions['d'];
@@ -494,14 +573,183 @@ class _Laba {
 			for (var i = 0; i < parts.length; i++) {
 				var part = parts[i];
 				if (part.length > 0) {
-					this.animateOne (elem, part, onComplete, null);
+					this.animateOne (elem, part, onComplete);
 					onComplete = null;
 				}
 			}
 		} else {
-			this.animateOne (elem, animationString, onComplete, null);
+			this.animateOne (elem, animationString, onComplete);
 			onComplete = null;
 		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	describeOne(elem, animationString, sb) {
+		var actionList = this.parseAnimationString (elem, animationString);
+		var durationAction1 = this.PerformActions['d'];
+		var durationAction2 = this.PerformActions['D'];
+		var loopingAction1 = this.PerformActions['L'];
+		var loopingAction2 = this.PerformActions['l'];
+
+		var numOfPipes = 0;
+
+		var duration = 0.0;
+		var looping = 1;
+		var loopingRelative = "absolute";
+		for (var i = 0; i < this.kMaxPipes; i++) {
+			if (actionList [i][0] != null) {
+				numOfPipes++;
+
+				var durationForPipe = this.kDefaultDuration;
+				for (var j = 0; j < this.kMaxActions; j++) {
+				    if(actionList [i][j] != null) {
+                        if (actionList[i][j].action == durationAction1 || actionList[i][j].action == durationAction2) {
+                            durationForPipe = actionList[i][j].fromValue;
+                        }
+                        if (actionList[i][j].action == loopingAction1) {
+                            looping =  actionList[i][j].fromValue;
+                        }
+                        if (actionList[i][j].action == loopingAction2) {
+                            looping =  actionList[i][j].fromValue;
+                            loopingRelative = "relative";
+                        }
+                    }
+				}
+				duration += durationForPipe;
+			}
+		}
+
+		// having only a single pipe makes things much more efficient, so treat it separately
+		if (numOfPipes == 1) {
+			var stringLengthBefore = sb.length();
+			
+			for (var i = 0; i < this.kMaxActions; i++) {
+				if (actionList [0][i] != null && !actionList [0][i].describe (sb)) {
+					break;
+				}
+			}
+
+
+			if (looping > 1) {
+				sb.append (" {0} repeating {1} times, ".format(loopingRelative, looping));
+			} else if (looping == -1) {
+				sb.append (" {0} repeating forever, ".format(loopingRelative));
+			}
+
+			if (stringLengthBefore != sb.length()) {
+				sb.append (" {0}  ".format(actionList [0][0].easingName));
+
+				sb.setLength(sb.length() - 2);
+				if (duration == 0.0) {
+					sb.append (" instantly.");
+				} else {
+					sb.append (" over {0} seconds.".format(duration * this.kTimeScale));
+				}
+			} else {
+				if (sb.length() > 2) {
+                    sb.setLength(sb.length() - 2);
+				}
+				sb.append (" wait for {0} seconds.".format(duration * this.kTimeScale));
+			}
+
+		} else {
+
+			for (var pipeIdx = 0; pipeIdx < numOfPipes; pipeIdx++) {
+				var stringLengthBefore = sb.length();
+
+				var durationForPipe = this.kDefaultDuration;
+				var loopingForPipe = 1;
+				var loopingRelativeForPipe = "absolute";
+				for (var j = 0; j < this.kMaxActions; j++) {
+				    if (actionList [pipeIdx][j] != null) {
+                        if (actionList[pipeIdx][j].action == durationAction1 || actionList[pipeIdx][j].action == durationAction2) {
+                            durationForPipe = actionList[pipeIdx][j].fromValue;
+                        }
+                        if (actionList[pipeIdx][j].action == loopingAction1) {
+                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
+                        }
+                        if (actionList[pipeIdx][j].action == loopingAction2) {
+                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
+                            loopingRelativeForPipe = "relative";
+                        }
+                    }
+				}
+
+				var idx = pipeIdx;
+				for (var j = 0; j < this.kMaxActions; j++) {
+					if (actionList [idx][j] != null && !actionList [idx][j].reset ()) {
+						break;
+					}
+				}
+
+				for (var j = 0; j < this.kMaxActions; j++) {
+					if (actionList [idx][j] != null && !actionList [idx][j].describe (sb)) {
+						break;
+					}
+				}
+
+				if (loopingForPipe > 1) {
+					sb.append (" {0} repeating {1} times, ".format(loopingRelativeForPipe, loopingForPipe));
+				} else if (loopingForPipe == -1) {
+					sb.append (" {0} repeating forever, ".format(loopingRelativeForPipe));
+				}
+
+				if (stringLengthBefore != sb.length()) {
+					sb.append (" {0}  ".format(actionList [idx][0].easingName));
+
+					sb.setLength(sb.length() - 2);
+					if (durationForPipe == 0.0) {
+						sb.append (" instantly.");
+					} else {
+						sb.append (" over {0} seconds.".format(durationForPipe * this.kTimeScale));
+					}
+				} else {
+					sb.append (" wait for {0} seconds.".format(durationForPipe * this.kTimeScale));
+				}
+
+				if (pipeIdx + 1 < numOfPipes) {
+					sb.append (" Once complete then  ");
+				}
+			}
+		}
+	}
+
+	describe(elem, animationString) {
+		if (animationString == null || animationString.length == 0) {
+			return "do nothing";
+		}
+
+		var sb = new StringBuilder ();
+		
+		if (animationString.includes ("[")) {
+			var parts = animationString.replace ('[', ' ').split ("]");
+			var animNumber = 0;
+			sb.append ("Perform a series of animations at the same time.\n");
+			for (var i = 0; i < parts.length; i++) {
+				var part = parts[i];
+				if (part.length > 0) {
+					sb.append ("Animation #{0} will ".format(animNumber+1));
+					this.describeOne (elem, part, sb);
+					sb.append ("\n");
+					animNumber++;
+				}
+			}
+		} else {
+			this.describeOne (elem, animationString, sb);
+		}
+			
+		if (sb.length() > 0) {
+			// upper case the starting letter
+			sb.insert (0, sb.toString ().substring (0, 1).toUpperCase ());
+			sb.delete(1,1);
+		}
+
+		return sb.toString ();
 	}
 	
 	
@@ -629,10 +877,10 @@ class _Laba {
 					elem.style.left = v + "px";
                 },
                 function (sb, action) {
-                    if(!action.inverse ) {
-                        sb.append(String.format(Locale.US, "move to {0} x pos, ", action.rawValue));
+                    if (!action.inverse ) {
+                        sb.append("move to {0} x pos, ".format(action.rawValue));
                     } else {
-                        sb.append(String.format(Locale.US, "move from {0} x pos, ", action.rawValue));
+                        sb.append("move from {0} x pos, ".format(action.rawValue));
                     }
                 }
         );
@@ -659,9 +907,9 @@ class _Laba {
                 },
                 function (sb, action) {
                     if(!action.inverse ) {
-                        sb.append(String.format(Locale.US, "move to %f y pos, ", action.rawValue));
+                        sb.append("move to {0} y pos, ".format(action.rawValue));
                     } else {
-                        sb.append(String.format(Locale.US, "move from %f y pos, ", action.rawValue));
+                        sb.append("move from {0} y pos, ".format(action.rawValue));
                     }
                     return null;
                 }
