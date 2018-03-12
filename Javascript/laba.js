@@ -1,5 +1,3 @@
-package com.smallplanet.labalib;
-
 /* The Labal langauge is very minimalistic. Each command is a single, non numerical character (excluding +/-). 
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
@@ -42,28 +40,274 @@ package com.smallplanet.labalib;
  * 
  */
 
-import android.animation.TimeInterpolator;
-import android.content.Context;
-import android.content.res.Resources;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.View;
-import android.view.animation.*;
 
-import com.learningmachine.android.app.LMApplication;
-import com.learningmachine.android.app.R;
+class _Laba {
+	
+	
+	
+	
+	
+	
+	constructor() {
+		this.allEasings = [
+			this.easeLinear,
+			this.easeInQuad,
+			this.easeOutQuad,
+			this.easeInOutQuad,
+			this.easeInCubic,
+			this.easeOutCubic,
+			this.easeInOutCubic,
+			this.easeInQuart,
+			this.easeOutQuart,
+			this.easeInOutQuart,
+			this.easeInQuint,
+			this.easeOutQuint,
+			this.easeInOutQuint,
+			this.easeInSine,
+			this.easeOutSine,
+			this.easeInOutSine,
+			this.easeInExpo,
+			this.easeOutExpo,
+			this.easeInOutExpo,
+			this.easeInCirc,
+			this.easeOutCirc,
+			this.easeInOutCirc
+		]
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+		this.allEasingsByName = [
+	            "ease linear", "ease out quad", "ease in quad", "ease in/out quad", "ease in cubic", "ease out cubic", "ease in/out cubic", "ease in quart", "ease out quart", "ease in/out quart",
+	            "ease in quint", "ease out quint", "ease in/out quint", "ease in sine", "eas out sine", "ease in/out sine", "ease in expo", "ease out expo", "ease in out expo", "ease in circ", "ease out circ", "ease in/out circ",
+	            "ease in bounce", "ease out bounce", "ease in/out bounce"
+	    ]
 
+		this.LabaDefaultValue = Number.MIN_VALUE;
+
+		this.InitActions = {};
+		this.PerformActions = {};
+		this.DescribeActions = {};
+
+
+		this.kMaxPipes = 40;
+		this.kMaxActions = 40;
+		this.kDefaultDuration = 0.87;
+	}
+	
+	isOperator(c) {
+        if (c == ',' || c == '|' || c == '!' || c == 'e') {
+            return true;
+        }
+        return (c in InitActions);
+    }
+
+    isNumber(c) {
+        return (c == '+' || c == '-' || c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' || c == '.');
+    }
+	
+    
+	
+	
+	
+	
+	
+	
+	
+	
+    easeLinear(val) {
+    	let start = 0.0;
+		let end = 1.0;
+        return start + (end - start) * val;
+    }
+
+    easeInQuad(val) {
+	    let start = 0.0;
+	    var end = 1.0;
+        end -= start;
+        return end * val * val + start;
+    }
+
+    easeOutQuad(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return -end * val * (val - 2) + start;
+    }
+
+    easeInOutQuad(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return end / 2 * val * val + start;
+        val--;
+        return -end / 2 * (val * (val - 2) - 1) + start;
+    }
+
+    easeInCubic(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * val * val * val + start;
+    }
+
+    easeOutCubic(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val--;
+        end -= start;
+        return end * (val * val * val + 1) + start;
+    }
+
+    easeInOutCubic(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return end / 2 * val * val * val + start;
+        val -= 2;
+        return end / 2 * (val * val * val + 2) + start;
+    }
+
+
+    easeInQuart(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * val * val * val * val + start;
+    }
+
+    easeOutQuart(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val--;
+        end -= start;
+        return -end * (val * val * val * val - 1) + start;
+    }
+
+    easeInOutQuart(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return end / 2 * val * val * val * val + start;
+        val -= 2;
+        return -end / 2 * (val * val * val * val - 2) + start;
+    }
+
+
+    easeInQuint(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * val * val * val * val * val + start;
+    }
+
+    easeOutQuint(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val--;
+        end -= start;
+        return end * (val * val * val * val * val + 1) + start;
+    }
+
+    easeInOutQuint(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return end / 2 * val * val * val * val * val + start;
+        val -= 2;
+        return end / 2 * (val * val * val * val * val + 2) + start;
+    }
+
+
+
+    easeInSine(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return -end * Math.cos(val / 1 * (Math.PI / 2)) + end + start;
+    }
+
+    easeOutSine(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * Math.sin(val / 1 * (Math.PI / 2)) + start;
+    }
+
+    easeInOutSine(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return -end / 2 * (Math.cos(Math.PI * val / 1) - 1) + start;
+    }
+
+
+
+    easeInExpo(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * Math.pow(2, 10 * (val / 1 - 1)) + start;
+    }
+
+    easeOutExpo(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return end * (-Math.pow(2, -10 * val / 1) + 1) + start;
+    }
+
+    easeInOutExpo(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return end / 2 * Math.pow(2, 10 * (val - 1)) + start;
+        val--;
+        return end / 2 * (-Math.pow(2, -10 * val) + 2) + start;
+    }
+
+
+
+
+    easeInCirc(val) {
+        let start = 0.0;
+        var end = 1.0;
+        end -= start;
+        return -end * (Math.sqrt(1 - val * val) - 1) + start;
+    }
+
+    easeOutCirc(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val--;
+        end -= start;
+        return end * Math.sqrt(1 - val * val) + start;
+    }
+
+    easeInOutCirc(val) {
+        let start = 0.0;
+        var end = 1.0;
+        val /= 0.5;
+        end -= start;
+        if (val < 1) return -end / 2 * (Math.sqrt(1 - val * val) - 1) + start;
+        val -= 2;
+        return end / 2 * (Math.sqrt(1 - val * val) + 1) + start;
+    }
+}
+
+var Laba = new _Laba();
+
+
+/*
 public class Laba {
 
 	public String labaNotation;
 	public String initialLabaNotation;
 	public Boolean loop;
 
-	private static float timeScale = 1.0f;
+	private static float timeScale = 1.0;
 
     @FunctionalInterface
     interface ValueAction <A, B, R> {
@@ -107,26 +351,26 @@ public class Laba {
 
         private void Update() {
             long currentTime = System.nanoTime();
-            float t = (float) (currentTime - startTime) / (float) (endTime - startTime);
+            float t = (currentTime - startTime) / (endTime - startTime);
             if(endTime == startTime) {
-            	t = 1.0f;
+            	t = 1.0;
 			}
 
-            if (t >= 1.0f) {
-                action.apply(1.0f, false);
+            if (t >= 1.0) {
+                action.apply(1.0, false);
 
                 if (loopCount == -1) {
-                    action.apply(0.0f, true);
+                    action.apply(0.0, true);
                     startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000.0f);
+                    endTime = startTime + (long) (duration * 1000000000.0);
                     ScheduleNextUpdate();
                     return;
                 }
                 if (loopCount > 1) {
                     loopCount--;
-                    action.apply(0.0f, true);
+                    action.apply(0.0, true);
                     startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000.0f);
+                    endTime = startTime + (long) (duration * 1000000000.0);
                     ScheduleNextUpdate();
                     return;
                 }
@@ -159,9 +403,9 @@ public class Laba {
 			duration = dura;
 			onComplete = complete;
             startTime = System.nanoTime();
-            endTime = startTime + (long)(duration * 1000000000.0f);
+            endTime = startTime + (long)(duration * 1000000000.0);
 
-            action.apply(0.0f, true);
+            action.apply(0.0, true);
             Update();
         }
     }
@@ -197,15 +441,15 @@ public class Laba {
 			this.init = InitActions.get(operatorChar);
 
 			if(this.inverse == false){
-				this.fromValue = 0.0f;
-				this.toValue = 1.0f;
+				this.fromValue = 0.0;
+				this.toValue = 1.0;
 			}else{
-				this.fromValue = 1.0f;
-				this.toValue = 0.0f;
+				this.fromValue = 1.0;
+				this.toValue = 0.0;
 			}
 
-			userFloat_1 = 0.0f;
-			userFloat_2 = 0.0f;
+			userFloat_1 = 0.0;
+			userFloat_2 = 0.0;
 
 			if(this.init != null){
                 this.init.apply(this);
@@ -247,24 +491,24 @@ public class Laba {
     	context = c;
 	}
 
-	private static float px2dp(float px) {
+	public static float px2dp(float px) {
 		if (context == null) {
 			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
 			return px;
 		}
 		Resources resources = context.getResources();
 		DisplayMetrics metrics = resources.getDisplayMetrics();
-		return px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+		return px / (metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
 	}
 
-	private static float dp2px(float dp) {
+	public static float dp2px(float dp) {
 		if (context == null) {
 			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
 			return dp;
 		}
 		Resources resources = context.getResources();
 		DisplayMetrics metrics = resources.getDisplayMetrics();
-		return dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+		return dp * (metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
 	}
 
     // these are here for convenience; use autocomplete to quickly look up the number of your easing function
@@ -385,17 +629,17 @@ public class Laba {
 					idx++;
 				}
 
-				value = 0.0f;
+				value = 0.0;
 
                 boolean fractionalPart = false;
-				float fractionalValue = 10.0f;
+				float fractionalValue = 10.0;
 				while (idx < charString.length) {
 					char c = charString [idx];
 					if (isNumber (c)) {
 						if (c >= '0' && c <= '9') {
 							if (fractionalPart) {
 								value = value + (c - '0') / fractionalValue;
-								fractionalValue *= 10.0f;
+								fractionalValue *= 10.0;
 							} else {
 								value = value * 10 + (c - '0');
 							}
@@ -411,7 +655,7 @@ public class Laba {
 				}
 
 				if (isNegativeNumber) {
-					value *= -1.0f;
+					value *= -1.0;
 				}
 			}
 
@@ -424,7 +668,7 @@ public class Laba {
 					currentActionIdx++;
 				} else {
 					if (action == 'e') {
-						int easingIdx = (int)(value);
+						int easingIdx = (value);
 						if (easingIdx >= 0 && idx < allEasings.length) {
 							easingAction = allEasings [easingIdx];
 							easingName = allEasingsByName [easingIdx];
@@ -451,8 +695,8 @@ public class Laba {
 
 		int numOfPipes = 0;
 
-		float duration = 0.0f;
-		float looping = 1.0f;
+		float duration = 0.0;
+		float looping = 1.0;
 		boolean loopingRelative = false;
 		for (int i = 0; i < kMaxPipes; i++) {
 			if (actionList [i][0] != null) {
@@ -496,7 +740,7 @@ public class Laba {
                         }
                     }
                     return null;
-                }, 0.0f, 1.0f, duration, onComplete, (int)looping);
+                }, 0.0, 1.0, duration, onComplete, looping);
 			} else {
 				for (int j = 0; j < kMaxActions; j++) {
 					if (actionList [0][j] != null && !actionList [0][j].Init ()) {
@@ -511,7 +755,7 @@ public class Laba {
 						}
 					}
                     return null;
-				}, 0.0f, 1.0f, duration * timeScale, onComplete, (int)looping);
+				}, 0.0, 1.0, duration * timeScale, onComplete, looping);
 			}
 		} else {
 
@@ -523,7 +767,7 @@ public class Laba {
 			for (int pipeIdx = numOfPipes - 1; pipeIdx >= 0; pipeIdx--) {
 
 				float durationForPipe = kDefaultDuration;
-				float loopingForPipe = 1.0f;
+				float loopingForPipe = 1.0;
 				boolean loopingRelativeForPipe = false;
 				for (int j = 0; j < kMaxActions; j++) {
 				    if(actionList [pipeIdx][j] != null) {
@@ -573,7 +817,7 @@ public class Laba {
 								}
 							}
 							return null;
-						}, 0.0f, 1.0f, durationForPipeFinal, localNextActionFinal, (int)loopingForPipeFinal);
+						}, 0.0, 1.0, durationForPipeFinal, localNextActionFinal, loopingForPipeFinal);
 					} else {
 						for (int j = 0; j < kMaxActions; j++) {
 							if (actionList [idx][j] != null && !actionList [idx][j].Init ()) {
@@ -588,7 +832,7 @@ public class Laba {
 								}
 							}
                             return null;
-						}, 0.0f, 1.0f, durationForPipeFinal * timeScale, localNextActionFinal, (int)loopingForPipeFinal);
+						}, 0.0, 1.0, durationForPipeFinal * timeScale, localNextActionFinal, loopingForPipeFinal);
 					}
 
 					return null;
@@ -636,7 +880,7 @@ public class Laba {
 
 		int numOfPipes = 0;
 
-		float duration = 0.0f;
+		float duration = 0.0;
 		int looping = 1;
 		String loopingRelative = "absolute";
 		for (int i = 0; i < kMaxPipes; i++) {
@@ -650,10 +894,10 @@ public class Laba {
                             durationForPipe = actionList[i][j].fromValue;
                         }
                         if (actionList[i][j].action == loopingAction1) {
-                            looping = (int) (float) actionList[i][j].fromValue;
+                            looping =  actionList[i][j].fromValue;
                         }
                         if (actionList[i][j].action == loopingAction2) {
-                            looping = (int) (float) actionList[i][j].fromValue;
+                            looping =  actionList[i][j].fromValue;
                             loopingRelative = "relative";
                         }
                     }
@@ -683,7 +927,7 @@ public class Laba {
 				sb.append (String.format(Locale.US, " %s  ", actionList [0][0].easingName));
 
 				sb.setLength(sb.length() - 2);
-				if (duration == 0.0f) {
+				if (duration == 0.0) {
 					sb.append (" instantly.");
 				} else {
 					sb.append (String.format(Locale.US, " over %f seconds.", duration * timeScale));
@@ -709,10 +953,10 @@ public class Laba {
                             durationForPipe = actionList[pipeIdx][j].fromValue;
                         }
                         if (actionList[pipeIdx][j].action == loopingAction1) {
-                            loopingForPipe = (int) (float) actionList[pipeIdx][j].fromValue;
+                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
                         }
                         if (actionList[pipeIdx][j].action == loopingAction2) {
-                            loopingForPipe = (int) (float) actionList[pipeIdx][j].fromValue;
+                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
                             loopingRelativeForPipe = "relative";
                         }
                     }
@@ -741,7 +985,7 @@ public class Laba {
 					sb.append (String.format(Locale.US, " %s  ", actionList [idx][0].easingName));
 
 					sb.setLength(sb.length() - 2);
-					if (durationForPipe == 0.0f) {
+					if (durationForPipe == 0.0) {
 						sb.append (" instantly.");
 					} else {
 						sb.append (String.format(Locale.US, " over %f seconds.", durationForPipe * timeScale));
@@ -833,7 +1077,7 @@ public class Laba {
 					(v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0f;
+                            newAction.rawValue = -1.0;
                         }
                         newAction.fromValue = newAction.toValue = newAction.rawValue;
                         return newAction;
@@ -847,7 +1091,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0f;
+                            newAction.rawValue = -1.0;
                         }
                         newAction.fromValue = newAction.toValue = newAction.rawValue;
                         return newAction;
@@ -861,7 +1105,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0f;
+                            newAction.rawValue = -1.0;
                         }
                         newAction.fromValue = newAction.toValue = newAction.rawValue;
                         return newAction;
@@ -904,7 +1148,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0f;
+                            newAction.rawValue = 0.0;
                         }
 
                         newAction.rawValue = dp2px(newAction.rawValue );
@@ -920,7 +1164,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationX((float)v);
+                        view.setTranslationX(v);
                         return null;
                     },
                     (s, a) -> {
@@ -940,7 +1184,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0f;
+                            newAction.rawValue = 0.0;
                         }
 
 						newAction.rawValue = dp2px(newAction.rawValue );
@@ -956,7 +1200,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationY((float)v);
+                        view.setTranslationY(v);
                         return null;
                     },
                     (s, a) -> {
@@ -977,7 +1221,7 @@ public class Laba {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (float)newAction.target.getMeasuredWidth();
+                            newAction.rawValue = newAction.target.getMeasuredWidth();
                         }
 						newAction.rawValue = dp2px(newAction.rawValue );
 
@@ -992,7 +1236,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationX((float)v);
+                        view.setTranslationX(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1014,7 +1258,7 @@ public class Laba {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (float)newAction.target.getMeasuredWidth();
+                            newAction.rawValue = newAction.target.getMeasuredWidth();
                         }
 						newAction.rawValue = dp2px(newAction.rawValue );
 
@@ -1029,7 +1273,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationX((float)v);
+                        view.setTranslationX(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1050,7 +1294,7 @@ public class Laba {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (float)newAction.target.getMeasuredHeight();
+                            newAction.rawValue = newAction.target.getMeasuredHeight();
                         }
 						newAction.rawValue = dp2px(newAction.rawValue );
 
@@ -1065,7 +1309,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationY((float)v);
+                        view.setTranslationY(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1086,7 +1330,7 @@ public class Laba {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (float)newAction.target.getMeasuredHeight();
+                            newAction.rawValue = newAction.target.getMeasuredHeight();
                         }
 						newAction.rawValue = dp2px(newAction.rawValue );
 
@@ -1102,7 +1346,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationY((float)v);
+                        view.setTranslationY(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1117,14 +1361,14 @@ public class Laba {
                     }
             );
 
-            /*
+            
             RegisterOperation(
                     'z',
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
                             newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (newAction.target.getMeasuredHeight() + newAction.target.getMeasuredWidth()) * 0.5f;
+                            newAction.rawValue = (newAction.target.getMeasuredHeight() + newAction.target.getMeasuredWidth()) * 00.5;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getTranslationZ();
@@ -1137,7 +1381,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setTranslationZ((float)v);
+                        view.setTranslationZ(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1150,7 +1394,7 @@ public class Laba {
                         }
                         return null;
                     }
-            );*/
+            );
 
 
             RegisterOperation(
@@ -1158,30 +1402,30 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 1.0f;
+                            newAction.rawValue = 1.0;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getScaleX();
                             newAction.toValue = newAction.rawValue;
                         }else{
-                            newAction.fromValue = (newAction.rawValue > 0.5f ? 0.0f : 1.0f);
+                            newAction.fromValue = (newAction.rawValue > 00.5 ? 0.0 : 1.0);
                             newAction.toValue = newAction.rawValue;
                         }
                         return newAction;
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setScaleX((float)v);
-                        view.setScaleY((float)v);
+                        view.setScaleX(v);
+                        view.setScaleY(v);
                         return null;
                     },
                     (s, a) -> {
                         LabaAction action = (LabaAction)a;
                         StringBuilder sb = (StringBuilder)s;
                         if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "scale to %d%%, ", (int)(action.rawValue * 100.0f)));
+                            sb.append(String.format(Locale.US, "scale to %d%%, ", (action.rawValue * 100.0)));
                         } else {
-                            sb.append(String.format(Locale.US, "scale in from %d%%, ", (int)(action.rawValue * 100.0f)));
+                            sb.append(String.format(Locale.US, "scale in from %d%%, ", (action.rawValue * 100.0)));
                         }
                         return null;
                     }
@@ -1192,7 +1436,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0f;
+                            newAction.rawValue = 0.0;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getRotation();
@@ -1205,7 +1449,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setRotation((float)v);
+                        view.setRotation(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1225,7 +1469,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0f;
+                            newAction.rawValue = 0.0;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getRotationX();
@@ -1239,7 +1483,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setRotationX((float)v);
+                        view.setRotationX(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1259,7 +1503,7 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0f;
+                            newAction.rawValue = 0.0;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getRotationY();
@@ -1272,7 +1516,7 @@ public class Laba {
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setRotationY((float)v);
+                        view.setRotationY(v);
                         return null;
                     },
                     (s, a) -> {
@@ -1292,29 +1536,29 @@ public class Laba {
                     (v) -> {
                         LabaAction newAction = (LabaAction)v;
                         if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 1.0f;
+                            newAction.rawValue = 1.0;
                         }
                         if(!newAction.inverse){
                             newAction.fromValue = newAction.target.getAlpha();
                             newAction.toValue = newAction.rawValue;
                         }else{
-                            newAction.fromValue = (newAction.rawValue > 0.5f ? 0.0f : 1.0f);
+                            newAction.fromValue = (newAction.rawValue > 00.5 ? 0.0 : 1.0);
                             newAction.toValue = newAction.rawValue;
                         }
                         return newAction;
                     },
                     (rt, v, action) -> {
                         View view = (View)rt;
-                        view.setAlpha((float)v);
+                        view.setAlpha(v);
                         return null;
                     },
                     (s, a) -> {
                         LabaAction action = (LabaAction)a;
                         StringBuilder sb = (StringBuilder)s;
                         if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "fade to %d%%, ", (int)(action.rawValue * 100.0f)));
+                            sb.append(String.format(Locale.US, "fade to %d%%, ", (action.rawValue * 100.0)));
                         } else {
-                            sb.append(String.format(Locale.US, "fade from %d%% to %d%%, ", (int)(action.fromValue * 100.0f),(int)(action.toValue * 100.0f)));
+                            sb.append(String.format(Locale.US, "fade from %d%% to %d%%, ", (action.fromValue * 100.0),(action.toValue * 100.0)));
                         }
                         return null;
                     }
@@ -1336,16 +1580,16 @@ public class Laba {
 
 
     private static class linear implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             return start + (end - start) * val;
         }
     }
 
     private static class easeInQuad implements TimeInterpolator {
-	    float start = 0.0f;
-	    float end = 1.0f;
+	    float start = 0.0;
+	    float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
             return end * val * val + start;
@@ -1353,8 +1597,8 @@ public class Laba {
     }
 
     private static class easeOutQuad implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
             return -end * val * (val - 2) + start;
@@ -1362,10 +1606,10 @@ public class Laba {
     }
 
     private static class easeInOutQuad implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
             if (val < 1) return end / 2 * val * val + start;
             val--;
@@ -1374,8 +1618,8 @@ public class Laba {
     }
 
     private static class easeInCubic implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
             return end * val * val * val + start;
@@ -1383,8 +1627,8 @@ public class Laba {
     }
 
     private static class easeOutCubic implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             val--;
             end -= start;
@@ -1393,10 +1637,10 @@ public class Laba {
     }
 
     private static class easeInOutCubic implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
             if (val < 1) return end / 2 * val * val * val + start;
             val -= 2;
@@ -1406,8 +1650,8 @@ public class Laba {
 
 
     private static class easeInQuart implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
             return end * val * val * val * val + start;
@@ -1415,8 +1659,8 @@ public class Laba {
     }
 
     private static class easeOutQuart implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             val--;
             end -= start;
@@ -1425,10 +1669,10 @@ public class Laba {
     }
 
     private static class easeInOutQuart implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
             if (val < 1) return end / 2 * val * val * val * val + start;
             val -= 2;
@@ -1438,8 +1682,8 @@ public class Laba {
 
 
     private static class easeInQuint implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
             return end * val * val * val * val * val + start;
@@ -1447,8 +1691,8 @@ public class Laba {
     }
 
     private static class easeOutQuint implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             val--;
             end -= start;
@@ -1457,10 +1701,10 @@ public class Laba {
     }
 
     private static class easeInOutQuint implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
             if (val < 1) return end / 2 * val * val * val * val * val + start;
             val -= 2;
@@ -1471,61 +1715,61 @@ public class Laba {
 
 
     private static class easeInSine implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return -end * (float)Math.cos(val / 1 * (Math.PI / 2)) + end + start;
+            return -end * Math.cos(val / 1 * (Math.PI / 2)) + end + start;
         }
     }
 
     private static class easeOutSine implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return end * (float)Math.sin(val / 1 * (Math.PI / 2)) + start;
+            return end * Math.sin(val / 1 * (Math.PI / 2)) + start;
         }
     }
 
     private static class easeInOutSine implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return -end / 2 * ((float)Math.cos(Math.PI * val / 1) - 1) + start;
+            return -end / 2 * (Math.cos(Math.PI * val / 1) - 1) + start;
         }
     }
 
 
 
     private static class easeInExpo implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return end * (float)Math.pow(2, 10 * (val / 1 - 1)) + start;
+            return end * Math.pow(2, 10 * (val / 1 - 1)) + start;
         }
     }
 
     private static class easeOutExpo implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return end * (-(float)Math.pow(2, -10 * val / 1) + 1) + start;
+            return end * (-Math.pow(2, -10 * val / 1) + 1) + start;
         }
     }
 
     private static class easeInOutExpo implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
-            if (val < 1) return end / 2 * (float)Math.pow(2, 10 * (val - 1)) + start;
+            if (val < 1) return end / 2 * Math.pow(2, 10 * (val - 1)) + start;
             val--;
-            return end / 2 * (-(float)Math.pow(2, -10 * val) + 2) + start;
+            return end / 2 * (-Math.pow(2, -10 * val) + 2) + start;
         }
     }
 
@@ -1533,34 +1777,35 @@ public class Laba {
 
 
     private static class easeInCirc implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             end -= start;
-            return -end * ((float)Math.sqrt(1 - val * val) - 1) + start;
+            return -end * (Math.sqrt(1 - val * val) - 1) + start;
         }
     }
 
     private static class easeOutCirc implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
             val--;
             end -= start;
-            return end * (float)Math.sqrt(1 - val * val) + start;
+            return end * Math.sqrt(1 - val * val) + start;
         }
     }
 
     private static class easeInOutCirc implements TimeInterpolator {
-        float start = 0.0f;
-        float end = 1.0f;
+        float start = 0.0;
+        float end = 1.0;
         public float getInterpolation(float val) {
-            val /= .5f;
+            val /= 0.5;
             end -= start;
-            if (val < 1) return -end / 2 * ((float)Math.sqrt(1 - val * val) - 1) + start;
+            if (val < 1) return -end / 2 * (Math.sqrt(1 - val * val) - 1) + start;
             val -= 2;
-            return end / 2 * ((float)Math.sqrt(1 - val * val) + 1) + start;
+            return end / 2 * (Math.sqrt(1 - val * val) + 1) + start;
         }
     }
-
 }
+
+*/
