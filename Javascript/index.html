@@ -9,23 +9,15 @@
 		</div>
 		
 		<script>
-			
-			console.log("random: " + Math.random())
-			console.log("linear: " + Laba.easeLinear(0.5))
-			console.log("linear: " + Laba.easeOutQuart(0.5))
-			
-			console.log("isNumber('a'): " + Laba.isNumber('a'))
-			console.log("isNumber('3'): " + Laba.isNumber('3'))
-			
-			
+						
 			var elem = document.getElementById("animation"); 
-			var animation = "[x200][y200]";
+			//var animation = "x100y100z200";
+			//var animation = "!<100";
+			var animation = "[s2|s1][r360][p0|p360][f0d0|!f]";
 			Laba.animate(elem, animation, function() {
 				console.log(Laba.describe(elem, animation))
 			})
-			
-			
-			
+						
 		</script>
 	</body>
 </html>

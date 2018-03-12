@@ -16,7 +16,7 @@
  * 
  * r roll
  * p pitch
- * y yaw
+ * w yaw
  * 
  * d duration for current pipe
  * 
@@ -156,6 +156,14 @@ String.prototype.format = function() {
 	return a
 }
 
+Math.radians = function(degrees) {
+	return degrees * Math.PI / 180;
+};
+
+Math.degrees = function(radians) {
+	return radians * 180 / Math.PI;
+};
+
 class _LabaTimer {
 
     update(timestamp) {
@@ -207,9 +215,7 @@ class _LabaTimer {
 
     // Simple timer class to replace the one method we used from LeanTween
     constructor(elem, act, startVal, endVal, dura, complete, loops) {
-		
-		var localThis = this;
-		
+					
         this.view = elem;
 		this.loopCount = loops;
 		this.action = act;
@@ -219,10 +225,7 @@ class _LabaTimer {
 		this.endTime = this.startTime + this.duration * 1000
 
         this.action(0.0, true);
-        
-		window.requestAnimationFrame(function(timestamp) {
-        	localThis.update(timestamp);
-        });
+	    this.update(0);
     }
 }
 
@@ -237,7 +240,7 @@ class _LabaAction {
 		this.easing = easing;
 		this.easingName = easingName;
 
-		this._action = laba.PerformActions[operatorChar];
+		this.action = laba.PerformActions[operatorChar];
 		this._describe = laba.DescribeActions[operatorChar];
 		this._init = laba.InitActions[operatorChar];
 		
@@ -265,8 +268,8 @@ class _LabaAction {
 	}
 
 	perform(v) {
-		if (this._action != null) {
-			this._action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
+		if (this.action != null) {
+			this.action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
 			return true;
 		}
 		return false;
@@ -332,7 +335,7 @@ class _Laba {
                             currentPipeIdx++;
                             currentActionIdx = 0;
                         }
-                        combinedActions [currentPipeIdx][currentActionIdx] = new LabaAction ('d', elem, false, this.kDefaultDuration * 0.26, easingAction, easingName);
+                        combinedActions [currentPipeIdx][currentActionIdx] = new _LabaAction (this, 'd', elem, false, this.kDefaultDuration * 0.26, easingAction, easingName);
                         currentPipeIdx++;
                         currentActionIdx = 0;
                     } else {
@@ -397,7 +400,7 @@ class _Laba {
 			// execute the action?
 			if (action != ' ') {
 				if (action in this.InitActions) {
-					console.log("[{0},{1}] action: {2} value: {3} inverted: {4}".format(currentPipeIdx, currentActionIdx, action, value, invertNextOperator));
+					//console.log("[{0},{1}] action: {2} value: {3} inverted: {4}".format(currentPipeIdx, currentActionIdx, action, value, invertNextOperator));
 					combinedActions [currentPipeIdx][currentActionIdx] = new _LabaAction (this, action, elem, invertNextOperator, value, easingAction, easingName);
 					currentActionIdx++;
 				} else {
@@ -423,7 +426,7 @@ class _Laba {
 		var durationAction2 = this.PerformActions['D'];
 		var loopAction1 = this.PerformActions['L'];
 		var loopAction2 = this.PerformActions['l'];
-
+		
 		var numOfPipes = 0;
 
 		var duration = 0.0;
@@ -493,7 +496,7 @@ class _Laba {
 				var loopingForPipe = 1.0;
 				var loopingRelativeForPipe = false;
 				for (var j = 0; j < this.kMaxActions; j++) {
-				    if (actionList [pipeIdx][j] != null) {
+				    if (actionList [pipeIdx][j] != null) {						
                         if (actionList[pipeIdx][j].action == durationAction1 || actionList[pipeIdx][j].action == durationAction2) {
                             durationForPipe = actionList[pipeIdx][j].fromValue;
                         }
@@ -506,7 +509,7 @@ class _Laba {
                         }
                     }
 				}
-
+				
 				let idx = pipeIdx;
                 var localNextAction = nextAction;
 				if (localNextAction == null) {
@@ -568,6 +571,46 @@ class _Laba {
 	}
 
 	animate(elem, animationString, onComplete) {
+		
+		// we utilize memory storage on the element to store our animatable variables
+		if (elem.labaTransformX == undefined){
+			
+			let localElem = elem;
+			localElem.labaTransformX = 0;
+			localElem.labaTransformY = 0;
+			localElem.labaTransformZ = 0;
+			localElem.labaRotationX = 0;
+			localElem.labaRotationY = 0;
+			localElem.labaRotationZ = 0;
+			localElem.labaScale = 1;
+			localElem.labaAlpha = 1;
+			
+			localElem.labaCommitElemVars = function() {
+				
+				var mat = Matrix.identity()				
+				mat = Matrix.multiply(mat, Matrix.translate(localElem.labaTransformX, localElem.labaTransformY, localElem.labaTransformZ))
+				mat = Matrix.multiply(mat, Matrix.rotateX(Math.radians(localElem.labaRotationX)))
+				mat = Matrix.multiply(mat, Matrix.rotateY(Math.radians(localElem.labaRotationY)))
+				mat = Matrix.multiply(mat, Matrix.rotateZ(Math.radians(localElem.labaRotationZ)))
+				mat = Matrix.multiply(mat, Matrix.scale(localElem.labaScale, localElem.labaScale, localElem.labaScale))
+				
+				let matString = "perspective(500px) matrix3d({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15})".format(
+					mat.m00,mat.m10,mat.m20,mat.m30,
+					mat.m01,mat.m11,mat.m21,mat.m31,
+					mat.m02,mat.m12,mat.m22,mat.m32,
+					mat.m03,mat.m13,mat.m23,mat.m33)
+					
+				localElem.style["webkitTransform"] = matString;
+				localElem.style["MozTransform"] = matString;
+				localElem.style["msTransform"] = matString;
+				localElem.style["OTransform"] = matString;
+				localElem.style["transform"] = matString;
+				
+				localElem.style["opacity"] = localElem.labaAlpha;
+			}
+			
+		}
+	
 		if (animationString.includes ("[")) {
 			var parts = animationString.replace ('[', ' ').split ("]");
 			for (var i = 0; i < parts.length; i++) {
@@ -682,7 +725,7 @@ class _Laba {
 
 				var idx = pipeIdx;
 				for (var j = 0; j < this.kMaxActions; j++) {
-					if (actionList [idx][j] != null && !actionList [idx][j].reset ()) {
+					if (actionList [idx][j] != null && !actionList [idx][j].reset (this)) {
 						break;
 					}
 				}
@@ -794,6 +837,7 @@ class _Laba {
 	    ]
 
 		this.LabaDefaultValue = Number.MIN_VALUE;
+		let LabaDefaultValueFinal = this.LabaDefaultValue
 
 		this.InitActions = {};
 		this.PerformActions = {};
@@ -808,7 +852,7 @@ class _Laba {
 		this.registerOperation(
 				'L',
 				function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = -1.0;
                     }
                     newAction.fromValue = newAction.toValue = newAction.rawValue;
@@ -821,7 +865,7 @@ class _Laba {
         this.registerOperation(
                 'l',
                 function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = -1.0;
                     }
                     newAction.fromValue = newAction.toValue = newAction.rawValue;
@@ -834,7 +878,7 @@ class _Laba {
         this.registerOperation(
                 'd',
                 function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = kDefaultDuration;
                     }
                     newAction.fromValue = newAction.toValue = newAction.rawValue;
@@ -847,7 +891,7 @@ class _Laba {
         this.registerOperation(
                 'D',
                 function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = kDefaultDuration;
                     }
                     // TODO: Figure out how we want to handle child index
@@ -861,20 +905,21 @@ class _Laba {
         this.registerOperation(
                 'x',
                 function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = 0.0;
                     }
                     if(!newAction.inverse){
-                        newAction.fromValue = newAction.elem.style.left;
+                        newAction.fromValue = newAction.elem.labaTransformX;
                         newAction.toValue = newAction.rawValue;
                     }else{
                         newAction.fromValue = newAction.rawValue;
-                        newAction.toValue = newAction.elem.style.left;
+                        newAction.toValue = newAction.elem.labaTransformX;
                     }
                     return newAction;
                 },
                 function (elem, v, action) {
-					elem.style.left = v + "px";
+					elem.labaTransformX = v;
+					elem.labaCommitElemVars();
                 },
                 function (sb, action) {
                     if (!action.inverse ) {
@@ -889,21 +934,21 @@ class _Laba {
         this.registerOperation(
                 'y',
                 function (newAction) {
-                    if (newAction.rawValue == this.LabaDefaultValue) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
                         newAction.rawValue = 0.0;
                     }
                     if(!newAction.inverse){
-                        newAction.fromValue = newAction.elem.style.top;
+                        newAction.fromValue = newAction.elem.labaTransformY;
                         newAction.toValue = newAction.rawValue;
                     }else{
                         newAction.fromValue = newAction.rawValue;
-                        newAction.toValue = newAction.elem.style.top;
+                        newAction.toValue = newAction.elem.labaTransformY;
                     }
                     return newAction;
                 },
                 function (elem, v, action) {
-					elem.style.top = v + "px";
-                    return null;
+					elem.labaTransformY = v;
+					elem.labaCommitElemVars();
                 },
                 function (sb, action) {
                     if(!action.inverse ) {
@@ -914,7 +959,305 @@ class _Laba {
                     return null;
                 }
         );
+		
+        this.registerOperation(
+                'z',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaTransformZ;
+                        newAction.toValue = newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaTransformZ;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+					elem.labaTransformZ = v;
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("move to {0} z pos, ".format(action.rawValue));
+                    } else {
+                        sb.append("move from {0} z pos, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+		
+        this.registerOperation(
+                '<',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                        newAction.rawValue = newAction.elem.getMeasuredWidth();
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaTransformX;
+                        newAction.toValue = newAction.elem.labaTransformX - newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaTransformX + newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaTransformX;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+					elem.labaTransformX = v
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("move left {0} units, ".format(action.rawValue));
+                    } else {
+                        sb.append("move in from left {0} units, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
 
+
+        this.registerOperation(
+                '>',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                        newAction.rawValue = newAction.elem.getMeasuredWidth();
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaTransformX;
+                        newAction.toValue = newAction.elem.labaTransformX + newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaTransformX - newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaTransformX;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+					elem.labaTransformX = v
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse) {
+                        sb.append("move right {0} units, ".format(action.rawValue));
+                    } else {
+                        sb.append("move in from right {0} units, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+        this.registerOperation(
+                '^',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                        newAction.rawValue = newAction.elem.getMeasuredHeight();
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaTransformY;
+                        newAction.toValue = newAction.elem.labaTransformY - newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaTransformY + newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaTransformY;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaTransformY = v
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("move up {0} units, ".format(action.rawValue));
+                    } else {
+                        sb.append("move in from above {0} units, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+        this.registerOperation(
+                'v',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                        newAction.rawValue = newAction.elem.getMeasuredHeight();
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaTransformY;
+                        newAction.toValue = newAction.elem.labaTransformY + newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaTransformY - newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaTransformY;
+                    }
+
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaTransformY = v
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("move down {0} units, ".format(action.rawValue));
+                    } else {
+                        sb.append("move in from below {0} units, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+        this.registerOperation(
+                's',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 1.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaScale;
+                        newAction.toValue = newAction.rawValue;
+                    }else{
+                        newAction.fromValue = (newAction.rawValue > 0.5 ? 0.0 : 1.0);
+                        newAction.toValue = newAction.rawValue;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaScale = v
+                    elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("scale to {0}%, ".format(action.rawValue * 100.0));
+                    } else {
+                        sb.append("scale in from {0}%, ".format(action.rawValue * 100.0));
+                    }
+                    return null;
+                }
+        );
+
+
+        this.registerOperation(
+                'r',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaRotationZ;
+                        newAction.toValue = newAction.elem.labaRotationZ - newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaRotationZ + newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaRotationZ;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaRotationZ = v;
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("rotate around z by {0}, ".format(action.rawValue));
+                    } else {
+                        sb.append("rotate in from around z by {0}, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+        this.registerOperation(
+                'p',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaRotationX;
+                        newAction.toValue = newAction.elem.labaRotationX - newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaRotationX + newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaRotationX;
+                    }
+
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaRotationX = v;
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("rotate around x by {0}, ".format(action.rawValue));
+                    } else {
+                        sb.append("rotate in from around x by {0}, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+        this.registerOperation(
+                'w',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaRotationY;
+                        newAction.toValue = newAction.elem.labaRotationY - newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.elem.labaRotationY + newAction.rawValue;
+                        newAction.toValue = newAction.elem.labaRotationY;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaRotationY = v;
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("rotate around y by {0}, ".format(action.rawValue));
+                    } else {
+                        sb.append("rotate in from around y by {0}, ".format(action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+		
+        this.registerOperation(
+                'f',
+                function (newAction) {
+                    if (newAction.rawValue == LabaDefaultValueFinal) {
+                        newAction.rawValue = 1.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.labaAlpha;
+                        newAction.toValue = newAction.rawValue;
+                    }else{
+                        newAction.fromValue = (newAction.rawValue > 0.5 ? 0.0 : 1.0);
+                        newAction.toValue = newAction.rawValue;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+                    elem.labaAlpha = v;
+					elem.labaCommitElemVars();
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append("fade to {0}%, ".format(action.rawValue * 100.0));
+                    } else {
+                        sb.append("fade from {0}% to {1}%, ".format(action.fromValue * 100.0,action.toValue * 100.0));
+                    }
+                    return null;
+                }
+        );
 	}
 	
     easeLinear(val) {
@@ -1105,1512 +1448,141 @@ class _Laba {
 var Laba = new _Laba();
 
 
-/*
-public class Laba {
 
-	public String labaNotation;
-	public String initialLabaNotation;
-	public Boolean loop;
-
-	private static float timeScale = 1.0;
-
-    @FunctionalInterface
-    interface ValueAction <A, B, R> {
-        public R apply (A a, B b);
+class Matrix {    
+    constructor(m00,m01,m02,m03,m10,m11,m12,m13,m20,m21,m22,m23,m30,m31,m32,m33) {
+        this.m00 = m00; this.m01 = m01; this.m02 = m02; this.m03 = m03;
+        this.m10 = m10; this.m11 = m11; this.m12 = m12; this.m13 = m13;
+        this.m20 = m20; this.m21 = m21; this.m22 = m22; this.m23 = m23;
+        this.m30 = m30; this.m31 = m31; this.m32 = m32; this.m33 = m33;
     }
-
-    @FunctionalInterface
-    public interface Callback <R> {
-        public R apply ();
-    }
-
-    @FunctionalInterface
-    interface EasingAction <A, B, C, R> {
-        public R apply (A a, B b, C c);
-    }
-
-    @FunctionalInterface
-    interface InitAction <A, R> {
-        public R apply (A a);
-    }
-
-    @FunctionalInterface
-    interface PerformAction <A, B, C, R> {
-        public R apply (A a, B b, C c);
-    }
-
-    @FunctionalInterface
-    interface DescribeAction <A, B, R> {
-        public R apply (A a, B b);
-    }
-
-    public static class LabaTimer {
-
-        long startTime;
-        long endTime;
-        int loopCount;
-        View view;
-        ValueAction action;
-        Callback onComplete;
-        float duration;
-
-        private void Update() {
-            long currentTime = System.nanoTime();
-            float t = (currentTime - startTime) / (endTime - startTime);
-            if(endTime == startTime) {
-            	t = 1.0;
-			}
-
-            if (t >= 1.0) {
-                action.apply(1.0, false);
-
-                if (loopCount == -1) {
-                    action.apply(0.0, true);
-                    startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000.0);
-                    ScheduleNextUpdate();
-                    return;
-                }
-                if (loopCount > 1) {
-                    loopCount--;
-                    action.apply(0.0, true);
-                    startTime = System.nanoTime();
-                    endTime = startTime + (long) (duration * 1000000000.0);
-                    ScheduleNextUpdate();
-                    return;
-                }
-
-                if (onComplete != null) {
-                    onComplete.apply();
-                }
-
-                return;
-            }
-
-            action.apply(t, false);
-            ScheduleNextUpdate();
-        }
-
-        private void ScheduleNextUpdate() {
-            view.post(new Runnable() {
-                public void run() {
-                    Update();
-                }
-            });
-        }
-
-        // Simple timer class to replace the one method we used from LeanTween
-        public LabaTimer(View v, ValueAction act, float startVal, float endVal, float dura, Callback complete, int loops) {
-
-            view = v;
-			loopCount = loops;
-			action = act;
-			duration = dura;
-			onComplete = complete;
-            startTime = System.nanoTime();
-            endTime = startTime + (long)(duration * 1000000000.0);
-
-            action.apply(0.0, true);
-            Update();
-        }
-    }
-
-	public static class LabaAction extends Object {
-		public boolean inverse;
-		public Float rawValue;
-		public Character operatorChar;
-
-		public View target;
-		public Float fromValue;
-		public Float toValue;
-		public PerformAction action;
-		public DescribeAction describe;
-		public InitAction init;
-		public TimeInterpolator easing;
-		public String easingName;
-
-
-		public float userFloat_1;
-		public float userFloat_2;
-
-		public LabaAction(char operatorChar, View target, boolean inverse, float rawValue, TimeInterpolator easing, String easingName) {
-			this.operatorChar = operatorChar;
-			this.target = target;
-			this.inverse = inverse;
-			this.rawValue = rawValue;
-			this.easing = easing;
-			this.easingName = easingName;
-
-			this.action = PerformActions.get(operatorChar);
-			this.describe = DescribeActions.get(operatorChar);
-			this.init = InitActions.get(operatorChar);
-
-			if(this.inverse == false){
-				this.fromValue = 0.0;
-				this.toValue = 1.0;
-			}else{
-				this.fromValue = 1.0;
-				this.toValue = 0.0;
-			}
-
-			userFloat_1 = 0.0;
-			userFloat_2 = 0.0;
-
-			if(this.init != null){
-                this.init.apply(this);
-			}
-		}
-
-		public boolean Init() {
-			if (init != null) {
-				LabaAction tempAction = new LabaAction (operatorChar, target, inverse, rawValue, easing, easingName);
-				this.fromValue = tempAction.fromValue;
-				this.toValue = tempAction.toValue;
-				this.userFloat_1 = tempAction.userFloat_1;
-				this.userFloat_2 = tempAction.userFloat_2;
-				return true;
-			}
-			return false;
-		}
-
-		public boolean Perform(float v) {
-			if (action != null) {
-				action.apply (target, fromValue + (toValue - fromValue) * easing.getInterpolation(v), this);
-				return true;
-			}
-			return false;
-		}
-
-		public boolean Describe(StringBuilder sb) {
-			if (action != null) {
-				describe.apply (sb, this);
-				return true;
-			}
-			return false;
-		}
+    
+	static identity() {
+	    return new Matrix(
+	        1.0,  0.0,  0.0,  0.0,
+	        0.0,  1.0,  0.0,  0.0,
+	        0.0,  0.0,  1.0,  0.0,
+	        0.0,  0.0,  0.0,  1.0
+	    )
+	}
+	
+	static translate(x, y, z) {
+	    return new Matrix(
+	        1.0,  0.0,  0.0,  x,
+	        0.0,  1.0,  0.0,  y,
+	        0.0,  0.0,  1.0,  z,
+	        0.0,  0.0,  0.0,  1.0
+	    )
 	}
 
-
-	private static Context context;
-    public static void setContext(Context c) {
-    	context = c;
+	static scale(x, y, z) {
+	    return new Matrix(
+	        x,  0.0,  0.0,  0.0,
+	        0.0,  y,  0.0,  0.0,
+	        0.0,  0.0,  z,  0.0,
+	        0.0,  0.0,  0.0,  1.0
+	    )
 	}
 
-	public static float px2dp(float px) {
-		if (context == null) {
-			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
-			return px;
-		}
-		Resources resources = context.getResources();
-		DisplayMetrics metrics = resources.getDisplayMetrics();
-		return px / (metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+	static rotateX(angle_in_rad) {
+	    let s = Math.sin(angle_in_rad), c = Math.cos(angle_in_rad)
+	    return new Matrix(
+	        1.0,  0.0,  0.0,  0.0,
+	        0.0,  c, -s,  0.0,
+	        0.0,  s,  c,  0.0,
+	        0.0,  0.0,  0.0,  1.0
+	    )
 	}
 
-	public static float dp2px(float dp) {
-		if (context == null) {
-			Log.d("LABA", "laba context is null, automatic conversion from px to dp is not available");
-			return dp;
-		}
-		Resources resources = context.getResources();
-		DisplayMetrics metrics = resources.getDisplayMetrics();
-		return dp * (metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+	static rotateY(angle_in_rad) {
+	    let s = Math.sin(angle_in_rad), c = Math.cos(angle_in_rad)
+	    return new Matrix(
+	        c,  0.0,  s,  0.0,
+	        0.0,  1.0,  0.0,  0.0,
+	        -s,  0.0,  c,  0.0,
+	        0.0,  0.0,  0.0,  1.0
+	    )
 	}
 
-    // these are here for convenience; use autocomplete to quickly look up the number of your easing function
-    public static final int linear = 0;
-    public static final int easeOutQuad = 1;
-    public static final int easeInQuad = 2;
-    public static final int easeInOutQuad = 3;
-    public static final int easeInCubic = 4;
-    public static final int easeOutCubic = 5;
-    public static final int easeInOutCubic = 6;
-    public static final int easeInQuart = 7;
-    public static final int easeOutQuart = 8;
-    public static final int easeInOutQuart = 9;
-    public static final int easeInQuint = 10;
-    public static final int easeOutQuint = 11;
-    public static final int easeInOutQuint = 12;
-    public static final int easeInSine = 13;
-    public static final int easeOutSine = 14;
-    public static final int easeInOutSine = 15;
-    public static final int easeInExpo = 16;
-    public static final int easeOutExpo = 17;
-    public static final int easeInOutExpo = 18;
-    public static final int easeInCirc = 19;
-    public static final int easeOutCirc = 20;
-    public static final int easeInOutCirc = 21;
-    public static final int easeInBounce = 22;
-    public static final int easeOutBounce = 23;
-    public static final int easeInOutBounce = 24;
+	static rotateZ(angle_in_rad) {
+	let s = Math.sin(angle_in_rad), c = Math.cos(angle_in_rad)
+	    return new Matrix(
+	        c, -s,  0.0,  0.0,
+	        s,  c,  0.0,  0.0,
+	        0.0,  0.0,  1.0,  0.0,
+	        0.0,  0.0,  0.0,  1.0
+	    )
+	}
+	
+	
 
-    private static TimeInterpolator[] allEasings = null;
-
-    private static String[] allEasingsByName = new String[] {
-            "ease linear", "ease out quad", "ease in quad", "ease in/out quad", "ease in cubic", "ease out cubic", "ease in/out cubic", "ease in quart", "ease out quart", "ease in/out quart",
-            "ease in quint", "ease out quint", "ease in/out quint", "ease in sine", "eas out sine", "ease in/out sine", "ease in expo", "ease out expo", "ease in out expo", "ease in circ", "ease out circ", "ease in/out circ",
-            "ease in bounce", "ease out bounce", "ease in/out bounce"
-    };
-
-	public static float LabaDefaultValue = Float.MIN_VALUE;
-
-	private static Map<Character,InitAction> InitActions;
-	private static Map<Character,PerformAction> PerformActions;
-	private static Map<Character,DescribeAction> DescribeActions;
-
-
-	private static int kMaxPipes = 40;
-	private static int kMaxActions = 40;
-	private static float kDefaultDuration = 0.87f;
-
-	private static boolean isOperator(char c) {
-        if (c == ',' || c == '|' || c == '!' || c == 'e') {
-            return true;
-        }
-        return InitActions.containsKey (c);
-    }
-
-    private static boolean isNumber(char c) {
-        return (c == '+' || c == '-' || c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' || c == '.');
-    }
-
-
-	private static LabaAction[][] ParseAnimationString(View view, String animationString) {
-		int idx = 0;
-		char[] charString = animationString.toCharArray();
-
-		LabaAction[][] combinedActions = new LabaAction[kMaxPipes][kMaxActions];
-		int currentPipeIdx = 0;
-		int currentActionIdx = 0;
-        TimeInterpolator easingAction = allEasings[easeInOutQuad];
-		String easingName = "";
-
-		while (idx < charString.length) {
-
-			boolean invertNextOperator = false;
-			char action = ' ';
-
-			// find the next operator
-			while (idx < charString.length) {
-				char c = charString [idx];
-				if (isOperator (c)) {
-					if (c == '!') {
-						invertNextOperator = true;
-					} else if (c == '|') {
-						currentPipeIdx++;
-						currentActionIdx = 0;
-                    } else if (c == ',') {
-					    if(currentActionIdx != 0) {
-                            currentPipeIdx++;
-                            currentActionIdx = 0;
-                        }
-                        combinedActions [currentPipeIdx][currentActionIdx] = new LabaAction ('d', view, false, kDefaultDuration * 0.26f, easingAction, easingName);
-                        currentPipeIdx++;
-                        currentActionIdx = 0;
-                    } else {
-						action = c;
-						idx++;
-						break;
-					}
-				}
-				idx++;
-			}
-
-			// skip anything not important
-			while (idx < charString.length && !isNumber (charString [idx]) && !isOperator (charString [idx])) {
-				idx++;
-			}
-
-			float value = LabaDefaultValue;
-
-			// if this is a number read it in
-			if (idx < charString.length && isNumber (charString [idx])) {
-				
-				// read in numerical value (if it exists)
-				boolean isNegativeNumber = false;
-				if (charString [idx] == '+') {
-					idx++;
-				} else if (charString [idx] == '-') {
-					isNegativeNumber = true;
-					idx++;
-				}
-
-				value = 0.0;
-
-                boolean fractionalPart = false;
-				float fractionalValue = 10.0;
-				while (idx < charString.length) {
-					char c = charString [idx];
-					if (isNumber (c)) {
-						if (c >= '0' && c <= '9') {
-							if (fractionalPart) {
-								value = value + (c - '0') / fractionalValue;
-								fractionalValue *= 10.0;
-							} else {
-								value = value * 10 + (c - '0');
-							}
-						}
-						if (c == '.') {
-							fractionalPart = true;
-						}
-					}
-					if (isOperator (c)) {
-						break;
-					}
-					idx++;
-				}
-
-				if (isNegativeNumber) {
-					value *= -1.0;
-				}
-			}
-
-
-			// execute the action?
-			if (action != ' ') {
-				if (InitActions.containsKey (action)) {
-					//Log.d("LABA", String.format(Locale.US, " [%d,%d]   action: %c   value: %f   inverted: %b", currentPipeIdx, currentActionIdx, action, value, invertNextOperator));
-					combinedActions [currentPipeIdx][currentActionIdx] = new LabaAction (action, view, invertNextOperator, value, easingAction, easingName);
-					currentActionIdx++;
-				} else {
-					if (action == 'e') {
-						int easingIdx = (value);
-						if (easingIdx >= 0 && idx < allEasings.length) {
-							easingAction = allEasings [easingIdx];
-							easingName = allEasingsByName [easingIdx];
-						}
-					}
-				}
-			}
-
-		}
-
-		return combinedActions;
+	static ortho(left, right, bottom, top, near, far) {
+	    let l = left, r = right, b = bottom, t = top, n = near, f = far
+	    let tx = -(r + l) / (r - l)
+	    let ty = -(t + b) / (t - b)
+	    let tz = -(f + n) / (f - n)
+	    return new Matrix(
+	        2.0 / (r - l),  0.0,            0.0,            tx,
+	        0.0,            2.0 / (t - b),  0.0,            ty,
+	        0.0,            0.0,            -2.0 / (f - n),  tz,
+	        0.0,            0.0,            0.0,            1.0
+	    )
 	}
 
-
-
-
-
-	private static void AnimateOne(View view, String animationString, Callback onComplete, StringBuilder describe) {
-		LabaAction[][] actionList = ParseAnimationString (view, animationString);
-		PerformAction durationAction1 = PerformActions.get('d');
-		PerformAction durationAction2 = PerformActions.get('D');
-		PerformAction loopAction1 = PerformActions.get('L');
-		PerformAction loopAction2 = PerformActions.get('l');
-
-		int numOfPipes = 0;
-
-		float duration = 0.0;
-		float looping = 1.0;
-		boolean loopingRelative = false;
-		for (int i = 0; i < kMaxPipes; i++) {
-			if (actionList [i][0] != null) {
-				numOfPipes++;
-
-				float durationForPipe = kDefaultDuration;
-				for (int j = 0; j < kMaxActions; j++) {
-                    if(actionList [i][j] != null) {
-                        if (actionList[i][j].action == durationAction1 || actionList[i][j].action == durationAction2) {
-                            durationForPipe = actionList[i][j].fromValue;
-                        }
-                        if (actionList[i][j].action == loopAction1) {
-                            looping = actionList[i][j].fromValue;
-                        }
-                        if (actionList[i][j].action == loopAction2) {
-                            loopingRelative = true;
-                            looping = actionList[i][j].fromValue;
-                        }
-                    }
-				}
-				duration += durationForPipe;
-			}
-		}
-
-		// having only a single pipe makes things much more efficient, so treat it separately
-		if (numOfPipes == 1) {
-
-			if (loopingRelative) {
-                new LabaTimer(view, (v,f) -> {
-                    float fv = (Float)v;
-                    if ((Boolean)f) {
-                        for (int j = 0; j < kMaxActions; j++) {
-                            if (actionList [0][j] != null && !actionList [0][j].Init ()) {
-                                break;
-                            }
-                        }
-                    }
-                    for (int i = 0; i < kMaxActions; i++) {
-                        if (actionList [0][i] != null && !actionList [0][i].Perform (fv)) {
-                            break;
-                        }
-                    }
-                    return null;
-                }, 0.0, 1.0, duration, onComplete, looping);
-			} else {
-				for (int j = 0; j < kMaxActions; j++) {
-					if (actionList [0][j] != null && !actionList [0][j].Init ()) {
-						break;
-					}
-				}
-                new LabaTimer (view, (v,f) -> {
-                    float fv = (Float)v;
-					for (int i = 0; i < kMaxActions; i++) {
-						if (actionList [0][i] != null && !actionList [0][i].Perform (fv)) {
-							break;
-						}
-					}
-                    return null;
-				}, 0.0, 1.0, duration * timeScale, onComplete, looping);
-			}
-		} else {
-
-			// for multiple pipes, the only mechanism leantween provides for this in onComplete actions
-			// unfortunately, this means we need to create an Action for each pipe
-
-
-			Callback nextAction = null;
-			for (int pipeIdx = numOfPipes - 1; pipeIdx >= 0; pipeIdx--) {
-
-				float durationForPipe = kDefaultDuration;
-				float loopingForPipe = 1.0;
-				boolean loopingRelativeForPipe = false;
-				for (int j = 0; j < kMaxActions; j++) {
-				    if(actionList [pipeIdx][j] != null) {
-                        if (actionList[pipeIdx][j].action == durationAction1 || actionList[pipeIdx][j].action == durationAction2) {
-                            durationForPipe = actionList[pipeIdx][j].fromValue;
-                        }
-                        if (actionList[pipeIdx][j].action == loopAction1) {
-                            loopingForPipe = actionList[pipeIdx][j].fromValue;
-                        }
-                        if (actionList[pipeIdx][j].action == loopAction2) {
-                            loopingRelativeForPipe = true;
-                            loopingForPipe = actionList[pipeIdx][j].fromValue;
-                        }
-                    }
-				}
-
-				int idx = pipeIdx;
-                Callback localNextAction = nextAction;
-				if (localNextAction == null) {
-					localNextAction = onComplete;
-				}
-				if (localNextAction == null) {
-					localNextAction = () -> { return null; };
-				}
-
-
-				final boolean loopingRelativeForPipeFinal = loopingRelativeForPipe;
-				final float durationForPipeFinal = durationForPipe;
-				final float loopingForPipeFinal = loopingForPipe;
-				final Callback localNextActionFinal = localNextAction;
-
-				nextAction = () -> {
-
-					if (loopingRelativeForPipeFinal) {
-                        new LabaTimer (view, (v,f) -> {
-                            float fv = (Float)v;
-							if ((Boolean)f) {
-								for (int j = 0; j < kMaxActions; j++) {
-									if (actionList [idx][j] != null && !actionList [idx][j].Init ()) {
-										break;
-									}
-								}
-							}
-							for (int j = 0; j < kMaxActions; j++) {
-								if (actionList [idx][j] != null && !actionList [idx][j].Perform (fv)) {
-									break;
-								}
-							}
-							return null;
-						}, 0.0, 1.0, durationForPipeFinal, localNextActionFinal, loopingForPipeFinal);
-					} else {
-						for (int j = 0; j < kMaxActions; j++) {
-							if (actionList [idx][j] != null && !actionList [idx][j].Init ()) {
-								break;
-							}
-						}
-                        new LabaTimer (view, (v,f) -> {
-                            float fv = (Float)v;
-							for (int j = 0; j < kMaxActions; j++) {
-								if (actionList [idx][j] != null && !actionList [idx][j].Perform (fv)) {
-									break;
-								}
-							}
-                            return null;
-						}, 0.0, 1.0, durationForPipeFinal * timeScale, localNextActionFinal, loopingForPipeFinal);
-					}
-
-					return null;
-				};
-			}
-
-			if (nextAction != null) {
-				nextAction.apply ();
-			} else {
-				if (onComplete != null) {
-					onComplete.apply ();
-				}
-			}
-
-		}
+	static ortho2d(left, right, bottom, top) {
+	    return new Matrix.ortho(left, right, bottom, top, -1, 1)
 	}
 
-	public static void Animate(View view, String animationString, Callback onComplete) {
-
-		CheckInit();
-
-		if (animationString.contains ("[")) {
-			String[] parts = animationString.replace ('[', ' ').split ("]");
-			for (String part : parts) {
-				if (part.length() > 0) {
-					AnimateOne (view, part, onComplete, null);
-					onComplete = null;
-				}
-			}
-		} else {
-			AnimateOne (view, animationString, onComplete, null);
-			onComplete = null;
-		}
+	static frustrum(left, right, bottom, top, nearval, farval) {
+    
+	    let x = (2.0 * nearval) / (right - left)
+	    let y = (2.0 * nearval) / (top - bottom)
+	    let a = (right + left) / (right - left)
+	    let b = (top + bottom) / (top - bottom)
+	    let c = -(farval + nearval) / ( farval - nearval)
+	    let d = -(2.0 * farval * nearval) / (farval - nearval)
+    
+	    return new Matrix(
+	        x,              0.0,            a,            0,
+	        0.0,            y,              b,            0,
+	        0.0,            0.0,            c,            d,
+	        0.0,            0.0,            -1.0,         0.0
+	    )
 	}
 
-
-
-
-	private static void DescribeOne(View view, String animationString, StringBuilder sb) {
-		LabaAction[][] actionList = ParseAnimationString (view, animationString);
-		PerformAction durationAction1 = PerformActions.get('d');
-		PerformAction durationAction2 = PerformActions.get('D');
-		PerformAction loopingAction1 = PerformActions.get('L');
-		PerformAction loopingAction2 = PerformActions.get('l');
-
-		int numOfPipes = 0;
-
-		float duration = 0.0;
-		int looping = 1;
-		String loopingRelative = "absolute";
-		for (int i = 0; i < kMaxPipes; i++) {
-			if (actionList [i][0] != null) {
-				numOfPipes++;
-
-				float durationForPipe = kDefaultDuration;
-				for (int j = 0; j < kMaxActions; j++) {
-				    if(actionList [i][j] != null) {
-                        if (actionList[i][j].action == durationAction1 || actionList[i][j].action == durationAction2) {
-                            durationForPipe = actionList[i][j].fromValue;
-                        }
-                        if (actionList[i][j].action == loopingAction1) {
-                            looping =  actionList[i][j].fromValue;
-                        }
-                        if (actionList[i][j].action == loopingAction2) {
-                            looping =  actionList[i][j].fromValue;
-                            loopingRelative = "relative";
-                        }
-                    }
-				}
-				duration += durationForPipe;
-			}
-		}
-
-		// having only a single pipe makes things much more efficient, so treat it separately
-		if (numOfPipes == 1) {
-			int stringLengthBefore = sb.length();
-
-			for (int i = 0; i < kMaxActions; i++) {
-				if (!actionList [0][i].Describe (sb)) {
-					break;
-				}
-			}
-
-
-			if (looping > 1) {
-				sb.append (String.format(Locale.US, " %d repeating %d times, ", loopingRelative, looping));
-			} else if (looping == -1) {
-				sb.append (String.format(Locale.US, " %d repeating forever, ", loopingRelative));
-			}
-
-			if (stringLengthBefore != sb.length()) {
-				sb.append (String.format(Locale.US, " %s  ", actionList [0][0].easingName));
-
-				sb.setLength(sb.length() - 2);
-				if (duration == 0.0) {
-					sb.append (" instantly.");
-				} else {
-					sb.append (String.format(Locale.US, " over %f seconds.", duration * timeScale));
-				}
-			} else {
-				if (sb.length() > 2) {
-                    sb.setLength(sb.length() - 2);
-				}
-				sb.append (String.format(Locale.US, " wait for %f seconds.", duration * timeScale));
-			}
-
-		} else {
-
-			for (int pipeIdx = 0; pipeIdx < numOfPipes; pipeIdx++) {
-				int stringLengthBefore = sb.length();
-
-				float durationForPipe = kDefaultDuration;
-				int loopingForPipe = 1;
-				String loopingRelativeForPipe = "absolute";
-				for (int j = 0; j < kMaxActions; j++) {
-				    if (actionList [pipeIdx][j] != null) {
-                        if (actionList[pipeIdx][j].action == durationAction1 || actionList[pipeIdx][j].action == durationAction2) {
-                            durationForPipe = actionList[pipeIdx][j].fromValue;
-                        }
-                        if (actionList[pipeIdx][j].action == loopingAction1) {
-                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
-                        }
-                        if (actionList[pipeIdx][j].action == loopingAction2) {
-                            loopingForPipe =  actionList[pipeIdx][j].fromValue;
-                            loopingRelativeForPipe = "relative";
-                        }
-                    }
-				}
-
-				int idx = pipeIdx;
-				for (int j = 0; j < kMaxActions; j++) {
-					if (actionList [idx][j] != null && !actionList [idx][j].Init ()) {
-						break;
-					}
-				}
-
-				for (int j = 0; j < kMaxActions; j++) {
-					if (actionList [idx][j] != null && !actionList [idx][j].Describe (sb)) {
-						break;
-					}
-				}
-
-				if (loopingForPipe > 1) {
-					sb.append (String.format(Locale.US, " %s repeating %d times, ", loopingRelativeForPipe, loopingForPipe));
-				} else if (loopingForPipe == -1) {
-					sb.append (String.format(Locale.US, " %s repeating forever, ", loopingRelativeForPipe));
-				}
-
-				if (stringLengthBefore != sb.length()) {
-					sb.append (String.format(Locale.US, " %s  ", actionList [idx][0].easingName));
-
-					sb.setLength(sb.length() - 2);
-					if (durationForPipe == 0.0) {
-						sb.append (" instantly.");
-					} else {
-						sb.append (String.format(Locale.US, " over %f seconds.", durationForPipe * timeScale));
-					}
-				} else {
-					sb.append (String.format(Locale.US, " wait for %f seconds.", durationForPipe * timeScale));
-				}
-
-				if (pipeIdx + 1 < numOfPipes) {
-					sb.append (" Once complete then  ");
-				}
-			}
-		}
+	static perspective(fovy, aspect, zNear, zFar) {
+	    let ymax = zNear * tan(fovy * Float.pi / 360.0)
+	    let ymin = -ymax
+	    let xmin = ymin * aspect
+	    let xmax = ymax * aspect
+	    return m4_frustrum(xmin, xmax, ymin, ymax, zNear, zFar)
 	}
 
-	public static String Describe(View view, String animationString) {
+	static multiply(a, b) {
+	    var result = Matrix.identity()
 
-		CheckInit();
-
-		if (animationString == null || animationString.length() == 0) {
-			return "do nothing";
-		}
-
-		StringBuilder sb = new StringBuilder ();
-
-		if (animationString.contains ("[")) {
-			String[] parts = animationString.replace ('[', ' ').split ("]");
-			int animNumber = 0;
-			sb.append ("Perform a series of animations at the same time.\n");
-			for (String part : parts) {
-				if (part.length() > 0) {
-					sb.append (String.format(Locale.US, "Animation #%d will ", animNumber+1));
-					DescribeOne (view, part, sb);
-					sb.append ("\n");
-					animNumber++;
-				}
-			}
-		} else {
-			DescribeOne (view, animationString, sb);
-		}
-			
-		if (sb.length() > 0) {
-			// upper case the starting letter
-			sb.insert (0, sb.toString ().substring (0, 1).toUpperCase ());
-			sb.delete(1,1);
-		}
-
-		return sb.toString ();
+	    result.m00  = a.m00 * b.m00  + a.m01 * b.m10  + a.m02 * b.m20   + a.m03 * b.m30
+	    result.m10  = a.m10 * b.m00  + a.m11 * b.m10  + a.m12 * b.m20   + a.m13 * b.m30
+	    result.m20  = a.m20 * b.m00  + a.m21 * b.m10  + a.m22 * b.m20  + a.m23 * b.m30
+	    result.m30  = a.m30 * b.m00  + a.m31 * b.m10  + a.m32 * b.m20  + a.m33 * b.m30
+    
+	    result.m01  = a.m00 * b.m01  + a.m01 * b.m11  + a.m02 * b.m21   + a.m03 * b.m31
+	    result.m11  = a.m10 * b.m01  + a.m11 * b.m11  + a.m12 * b.m21   + a.m13 * b.m31
+	    result.m21  = a.m20 * b.m01  + a.m21 * b.m11  + a.m22 * b.m21  + a.m23 * b.m31
+	    result.m31  = a.m30 * b.m01  + a.m31 * b.m11  + a.m32 * b.m21  + a.m33 * b.m31
+    
+	    result.m02  = a.m00 * b.m02  + a.m01 * b.m12  + a.m02 * b.m22  + a.m03 * b.m32
+	    result.m12  = a.m10 * b.m02  + a.m11 * b.m12  + a.m12 * b.m22  + a.m13 * b.m32
+	    result.m22 = a.m20 * b.m02  + a.m21 * b.m12  + a.m22 * b.m22 + a.m23 * b.m32
+	    result.m32 = a.m30 * b.m02  + a.m31 * b.m12  + a.m32 * b.m22 + a.m33 * b.m32
+    
+	    result.m03 = a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23  + a.m03 * b.m33
+	    result.m13 = a.m10 * b.m03 + a.m11 * b.m13 + a.m12 * b.m23  + a.m13 * b.m33
+	    result.m23 = a.m20 * b.m03 + a.m21 * b.m13 + a.m22 * b.m23 + a.m23 * b.m33
+	    result.m33 = a.m30 * b.m03 + a.m31 * b.m13 + a.m32 * b.m23 + a.m33 * b.m33
+    
+	    return result;
 	}
-
-
-
-	private static void CheckInit() {
-		if (allEasings == null ){
-			allEasings = new TimeInterpolator[] {
-					new linear(),
-					new easeOutQuad(),
-					new easeInQuad(),
-					new easeInOutQuad(),
-					new easeInCubic(),
-					new easeOutCubic(),
-					new easeInOutCubic(),
-					new easeInQuart(),
-					new easeOutQuart(),
-					new easeInOutQuart(),
-					new easeInQuint(),
-                    new easeOutQuint(),
-                    new easeInOutQuint(),
-                    new easeInSine(),
-                    new easeOutSine(),
-                    new easeInOutSine(),
-                    new easeInExpo(),
-                    new easeOutExpo(),
-                    new easeInOutExpo(),
-                    new easeInCirc(),
-                    new easeOutCirc(),
-                    new easeInOutCirc(),
-			};
-		}
-
-
-		if(InitActions == null) {
-			InitActions = new HashMap<Character, InitAction>();
-			PerformActions = new HashMap<Character, PerformAction>();
-			DescribeActions = new HashMap<Character, DescribeAction>();
-
-			RegisterOperation(
-					'L',
-					(v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0;
-                        }
-                        newAction.fromValue = newAction.toValue = newAction.rawValue;
-                        return newAction;
-                    },
-                    (rt, v, action) -> { return null; },
-                    (sb, action) -> { return null; }
-            );
-
-            RegisterOperation(
-                    'L',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0;
-                        }
-                        newAction.fromValue = newAction.toValue = newAction.rawValue;
-                        return newAction;
-                    },
-                    (rt, v, action) -> { return null; },
-                    (sb, action) -> { return null; }
-            );
-
-            RegisterOperation(
-                    'l',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = -1.0;
-                        }
-                        newAction.fromValue = newAction.toValue = newAction.rawValue;
-                        return newAction;
-                    },
-                    (rt, v, action) -> { return null; },
-                    (sb, action) -> { return null; }
-            );
-
-            RegisterOperation(
-                    'd',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = kDefaultDuration;
-                        }
-                        newAction.fromValue = newAction.toValue = newAction.rawValue;
-                        return newAction;
-                    },
-                    (rt, v, action) -> { return null; },
-                    (sb, action) -> { return null; }
-            );
-
-            RegisterOperation(
-                    'D',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = kDefaultDuration;
-                        }
-                        // TODO: Figure out how we want to handle child index
-                        //newAction.fromValue = newAction.toValue = newAction.rawValue * newAction.target.GetSiblingIndex();
-                        return newAction;
-                    },
-                    (rt, v, action) -> { return null; },
-                    (sb, action) -> { return null; }
-            );
-
-            RegisterOperation(
-                    'x',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0;
-                        }
-
-                        newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationX();
-                            newAction.toValue = newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationX();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationX(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move to {0} x pos, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move from {0} x pos, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'y',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0;
-                        }
-
-						newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationY();
-                            newAction.toValue = newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationY();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationY(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move to %f y pos, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move from %f y pos, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    '<',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = newAction.target.getMeasuredWidth();
-                        }
-						newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationX();
-                            newAction.toValue = newAction.target.getTranslationX() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getTranslationX() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationX();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationX(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move left %f units, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move in from left %f units, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-
-            RegisterOperation(
-                    '>',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = newAction.target.getMeasuredWidth();
-                        }
-						newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationX();
-                            newAction.toValue = newAction.target.getTranslationX() + newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getTranslationX() - newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationX();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationX(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse) {
-                            sb.append(String.format(Locale.US, "move right %f units, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move in from right %f units, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    '^',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = newAction.target.getMeasuredHeight();
-                        }
-						newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationY();
-                            newAction.toValue = newAction.target.getTranslationY() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getTranslationY() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationY();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationY(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move up %f units, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move in from above %f units, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'v',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = newAction.target.getMeasuredHeight();
-                        }
-						newAction.rawValue = dp2px(newAction.rawValue );
-
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationY();
-                            newAction.toValue = newAction.target.getTranslationY() + newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getTranslationY() - newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationY();
-                        }
-
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationY(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move down %f units, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move in from below %f units, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            
-            RegisterOperation(
-                    'z',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                            newAction.rawValue = (newAction.target.getMeasuredHeight() + newAction.target.getMeasuredWidth()) * 00.5;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getTranslationZ();
-                            newAction.toValue = newAction.target.getTranslationZ() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getTranslationZ() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getTranslationZ();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setTranslationZ(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "move along z axis %f units, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "move in from z axis %f units, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-
-            RegisterOperation(
-                    's',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 1.0;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getScaleX();
-                            newAction.toValue = newAction.rawValue;
-                        }else{
-                            newAction.fromValue = (newAction.rawValue > 00.5 ? 0.0 : 1.0);
-                            newAction.toValue = newAction.rawValue;
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setScaleX(v);
-                        view.setScaleY(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "scale to %d%%, ", (action.rawValue * 100.0)));
-                        } else {
-                            sb.append(String.format(Locale.US, "scale in from %d%%, ", (action.rawValue * 100.0)));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'r',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getRotation();
-                            newAction.toValue = newAction.target.getRotation() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getRotation() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getRotation();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setRotation(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "rotate around z by %f°, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "rotate in from around z by %f°, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'p',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getRotationX();
-                            newAction.toValue = newAction.target.getRotationX() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getRotationX() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getRotationX();
-                        }
-
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setRotationX(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "rotate around x by %f°, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "rotate in from around x by %f°, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'y',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 0.0;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getRotationY();
-                            newAction.toValue = newAction.target.getRotationY() - newAction.rawValue;
-                        }else{
-                            newAction.fromValue = newAction.target.getRotationY() + newAction.rawValue;
-                            newAction.toValue = newAction.target.getRotationY();
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setRotationY(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "rotate around y by %f°, ", action.rawValue));
-                        } else {
-                            sb.append(String.format(Locale.US, "rotate in from around y by %f°, ", action.rawValue));
-                        }
-                        return null;
-                    }
-            );
-
-            RegisterOperation(
-                    'f',
-                    (v) -> {
-                        LabaAction newAction = (LabaAction)v;
-                        if (newAction.rawValue == LabaDefaultValue) {
-                            newAction.rawValue = 1.0;
-                        }
-                        if(!newAction.inverse){
-                            newAction.fromValue = newAction.target.getAlpha();
-                            newAction.toValue = newAction.rawValue;
-                        }else{
-                            newAction.fromValue = (newAction.rawValue > 00.5 ? 0.0 : 1.0);
-                            newAction.toValue = newAction.rawValue;
-                        }
-                        return newAction;
-                    },
-                    (rt, v, action) -> {
-                        View view = (View)rt;
-                        view.setAlpha(v);
-                        return null;
-                    },
-                    (s, a) -> {
-                        LabaAction action = (LabaAction)a;
-                        StringBuilder sb = (StringBuilder)s;
-                        if(!action.inverse ) {
-                            sb.append(String.format(Locale.US, "fade to %d%%, ", (action.rawValue * 100.0)));
-                        } else {
-                            sb.append(String.format(Locale.US, "fade from %d%% to %d%%, ", (action.fromValue * 100.0),(action.toValue * 100.0)));
-                        }
-                        return null;
-                    }
-            );
-
-		}
-
-
-	}
-
-
-	static public void RegisterOperation(char charOperator, InitAction init, PerformAction perform, DescribeAction describe){
-		CheckInit();
-		InitActions.put((Character)charOperator, init);
-		PerformActions.put((Character)charOperator, perform);
-		DescribeActions.put((Character)charOperator, describe);
-	}
-
-
-
-    private static class linear implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            return start + (end - start) * val;
-        }
-    }
-
-    private static class easeInQuad implements TimeInterpolator {
-	    float start = 0.0;
-	    float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * val * val + start;
-        }
-    }
-
-    private static class easeOutQuad implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return -end * val * (val - 2) + start;
-        }
-    }
-
-    private static class easeInOutQuad implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return end / 2 * val * val + start;
-            val--;
-            return -end / 2 * (val * (val - 2) - 1) + start;
-        }
-    }
-
-    private static class easeInCubic implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * val * val * val + start;
-        }
-    }
-
-    private static class easeOutCubic implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val--;
-            end -= start;
-            return end * (val * val * val + 1) + start;
-        }
-    }
-
-    private static class easeInOutCubic implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return end / 2 * val * val * val + start;
-            val -= 2;
-            return end / 2 * (val * val * val + 2) + start;
-        }
-    }
-
-
-    private static class easeInQuart implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * val * val * val * val + start;
-        }
-    }
-
-    private static class easeOutQuart implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val--;
-            end -= start;
-            return -end * (val * val * val * val - 1) + start;
-        }
-    }
-
-    private static class easeInOutQuart implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return end / 2 * val * val * val * val + start;
-            val -= 2;
-            return -end / 2 * (val * val * val * val - 2) + start;
-        }
-    }
-
-
-    private static class easeInQuint implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * val * val * val * val * val + start;
-        }
-    }
-
-    private static class easeOutQuint implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val--;
-            end -= start;
-            return end * (val * val * val * val * val + 1) + start;
-        }
-    }
-
-    private static class easeInOutQuint implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return end / 2 * val * val * val * val * val + start;
-            val -= 2;
-            return end / 2 * (val * val * val * val * val + 2) + start;
-        }
-    }
-
-
-
-    private static class easeInSine implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return -end * Math.cos(val / 1 * (Math.PI / 2)) + end + start;
-        }
-    }
-
-    private static class easeOutSine implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * Math.sin(val / 1 * (Math.PI / 2)) + start;
-        }
-    }
-
-    private static class easeInOutSine implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return -end / 2 * (Math.cos(Math.PI * val / 1) - 1) + start;
-        }
-    }
-
-
-
-    private static class easeInExpo implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * Math.pow(2, 10 * (val / 1 - 1)) + start;
-        }
-    }
-
-    private static class easeOutExpo implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return end * (-Math.pow(2, -10 * val / 1) + 1) + start;
-        }
-    }
-
-    private static class easeInOutExpo implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return end / 2 * Math.pow(2, 10 * (val - 1)) + start;
-            val--;
-            return end / 2 * (-Math.pow(2, -10 * val) + 2) + start;
-        }
-    }
-
-
-
-
-    private static class easeInCirc implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            end -= start;
-            return -end * (Math.sqrt(1 - val * val) - 1) + start;
-        }
-    }
-
-    private static class easeOutCirc implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val--;
-            end -= start;
-            return end * Math.sqrt(1 - val * val) + start;
-        }
-    }
-
-    private static class easeInOutCirc implements TimeInterpolator {
-        float start = 0.0;
-        float end = 1.0;
-        public float getInterpolation(float val) {
-            val /= 0.5;
-            end -= start;
-            if (val < 1) return -end / 2 * (Math.sqrt(1 - val * val) - 1) + start;
-            val -= 2;
-            return end / 2 * (Math.sqrt(1 - val * val) + 1) + start;
-        }
-    }
+	
 }
 
-*/
