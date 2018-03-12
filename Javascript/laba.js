@@ -40,13 +40,478 @@
  * 
  */
 
+// requestAnimationFrame polyfill by Erik Möller
+// fixes from Paul Irish and Tino Zijdel
+ 
+(function() {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+ 
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+ 
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
+
+
+String.prototype.format = function() {
+	a = this;
+	for (k in arguments) {
+		a = a.replace("{" + k + "}", arguments[k])
+	}
+	return a
+}
+
+class _LabaTimer {
+
+    update(timestamp) {
+		
+		var localThis = this;
+		
+        var currentTime = performance.now();
+        var t = (currentTime - this.startTime) / (this.endTime - this.startTime);
+        if (this.endTime == this.startTime) {
+        	t = 1.0;
+		}
+	
+		//console.log("{0}   {1}   {2}   {3}".format(this.startTime, this.endTime, currentTime, t))
+        if (t >= 1.0) {
+            this.action(1.0, false);
+
+            if (this.loopCount == -1) {
+                this.action(0.0, true);
+		        this.startTime = performance.now();
+				this.endTime = this.startTime + this.duration * 1000
+                window.requestAnimationFrame(function(timestamp) {
+		        	localThis.update(timestamp);
+		        });
+                return;
+            }
+            if (this.loopCount > 1) {
+                this.loopCount--;
+                this.action(0.0, true);
+		        this.startTime = performance.now();
+				this.endTime = this.startTime + this.duration * 1000
+                window.requestAnimationFrame(function(timestamp) {
+		        	localThis.update(timestamp);
+		        });
+                return;
+            }
+
+            if (this.onComplete != null) {
+                this.onComplete();
+            }
+
+            return;
+        }
+
+        this.action(t, false);
+        window.requestAnimationFrame(function(timestamp) {
+        	localThis.update(timestamp);
+        });
+    }
+
+    // Simple timer class to replace the one method we used from LeanTween
+    constructor(elem, act, startVal, endVal, dura, complete, loops) {
+		
+		var localThis = this;
+		
+        this.view = elem;
+		this.loopCount = loops;
+		this.action = act;
+		this.duration = dura;
+		this.onComplete = complete;
+        this.startTime = performance.now();
+		this.endTime = this.startTime + this.duration * 1000
+
+        this.action(0.0, true);
+        
+		window.requestAnimationFrame(function(timestamp) {
+        	localThis.update(timestamp);
+        });
+    }
+}
+
+class _LabaAction {
+	
+	constructor(laba, operatorChar, elem, inverse, rawValue, easing, easingName) {
+		
+		this.operatorChar = operatorChar;
+		this.elem = elem;
+		this.inverse = inverse;
+		this.rawValue = rawValue;
+		this.easing = easing;
+		this.easingName = easingName;
+
+		this.action = laba.PerformActions[operatorChar];
+		this.describe = laba.DescribeActions[operatorChar];
+		this.init = laba.InitActions[operatorChar];
+		
+		if(this.inverse == false){
+			this.fromValue = 0.0;
+			this.toValue = 1.0;
+		}else{
+			this.fromValue = 1.0;
+			this.toValue = 0.0;
+		}
+		
+		if(this.init != null){
+            this.init(this);
+		}
+	}
+	
+	reset(laba) {
+		if (this.init != null) {
+			var tempAction = new _LabaAction (laba, this.operatorChar, this.elem, this.inverse, this.rawValue, this.easing, this.easingName);
+			this.fromValue = tempAction.fromValue;
+			this.toValue = tempAction.toValue;
+			return true;
+		}
+		return false;
+	}
+
+	perform(v) {
+		if (this.action != null) {
+			this.action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
+			return true;
+		}
+		return false;
+	}
+
+	describe(sb) {
+		if (this.describe != null) {
+			this.describe (sb, this);
+			return true;
+		}
+		return false;
+	}
+}
+
 
 class _Laba {
 	
+	isOperator(c) {
+        if (c == ',' || c == '|' || c == '!' || c == 'e') {
+            return true;
+        }
+        return (c in this.InitActions);
+    }
+
+    isNumber(c) {
+        return (c == '+' || c == '-' || c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' || c == '.');
+    }
+	
+    
+	
+	parseAnimationString(elem, charString) {
+		var idx = 0;
+
+		var currentPipeIdx = 0;
+		var currentActionIdx = 0;
+        var easingAction = this.allEasings [3]; // easeInOutQuad
+		var easingName = this.allEasingsByName [3];
+		
+		var combinedActions = []
+		for(var i=0;i<this.kMaxPipes;i++){
+			combinedActions[i] = []
+			for(var j=0;j<this.kMaxActions;j++){
+				combinedActions[i][j] = null
+			}
+		}
+
+		while (idx < charString.length) {
+
+			var invertNextOperator = false;
+			var action = ' ';
+
+			// find the next operator
+			while (idx < charString.length) {
+				var c = charString [idx];
+				if (this.isOperator (c)) {
+					if (c == '!') {
+						invertNextOperator = true;
+					} else if (c == '|') {
+						currentPipeIdx++;
+						currentActionIdx = 0;
+                    } else if (c == ',') {
+					    if (currentActionIdx != 0) {
+                            currentPipeIdx++;
+                            currentActionIdx = 0;
+                        }
+                        combinedActions [currentPipeIdx][currentActionIdx] = new LabaAction ('d', elem, false, this.kDefaultDuration * 0.26, easingAction, easingName);
+                        currentPipeIdx++;
+                        currentActionIdx = 0;
+                    } else {
+						action = c;
+						idx++;
+						break;
+					}
+				}
+				idx++;
+			}
+
+			// skip anything not important
+			while (idx < charString.length && !this.isNumber (charString [idx]) && !this.isOperator (charString [idx])) {
+				idx++;
+			}
+
+			var value = this.LabaDefaultValue;
+
+			// if this is a number read it in
+			if (idx < charString.length && this.isNumber (charString [idx])) {
+				
+				// read in numerical value (if it exists)
+				var isNegativeNumber = false;
+				if (charString [idx] == '+') {
+					idx++;
+				} else if (charString [idx] == '-') {
+					isNegativeNumber = true;
+					idx++;
+				}
+
+				value = 0.0;
+
+                var fractionalPart = false;
+				var fractionalValue = 10.0;
+				while (idx < charString.length) {
+					var c = charString [idx];
+					if (this.isNumber (c)) {
+						if (c >= '0' && c <= '9') {
+							if (fractionalPart) {
+								value = value + (c - '0') / fractionalValue;
+								fractionalValue *= 10.0;
+							} else {
+								value = value * 10 + (c - '0');
+							}
+						}
+						if (c == '.') {
+							fractionalPart = true;
+						}
+					}
+					if (this.isOperator (c)) {
+						break;
+					}
+					idx++;
+				}
+
+				if (isNegativeNumber) {
+					value *= -1.0;
+				}
+			}
+
+
+			// execute the action?
+			if (action != ' ') {
+				if (action in this.InitActions) {
+					console.log("[{0},{1}] action: {2} value: {3} inverted: {4}".format(currentPipeIdx, currentActionIdx, action, value, invertNextOperator));
+					combinedActions [currentPipeIdx][currentActionIdx] = new _LabaAction (this, action, elem, invertNextOperator, value, easingAction, easingName);
+					currentActionIdx++;
+				} else {
+					if (action == 'e') {
+						var easingIdx = (value);
+						if (easingIdx >= 0 && idx < allEasings.length) {
+							easingAction = this.allEasings [easingIdx];
+							easingName = this.allEasingsByName [easingIdx];
+						}
+					}
+				}
+			}
+
+		}
+
+		return combinedActions;
+	}
+	
+	animateOne(elem, animationString, onComplete, describe) {
+		var localThis = this;
+		var actionList = this.parseAnimationString (elem, animationString);
+		var durationAction1 = this.PerformActions['d'];
+		var durationAction2 = this.PerformActions['D'];
+		var loopAction1 = this.PerformActions['L'];
+		var loopAction2 = this.PerformActions['l'];
+
+		var numOfPipes = 0;
+
+		var duration = 0.0;
+		var looping = 1.0;
+		var loopingRelative = false;
+		for (var i = 0; i < this.kMaxPipes; i++) {
+			if (actionList [i][0] != null) {
+				numOfPipes++;
+
+				var durationForPipe = this.kDefaultDuration;
+				for (var j = 0; j < this.kMaxActions; j++) {
+                    if(actionList [i][j] != null) {
+                        if (actionList[i][j].action == durationAction1 || actionList[i][j].action == durationAction2) {
+                            durationForPipe = actionList[i][j].fromValue;
+                        }
+                        if (actionList[i][j].action == loopAction1) {
+                            looping = actionList[i][j].fromValue;
+                        }
+                        if (actionList[i][j].action == loopAction2) {
+                            loopingRelative = true;
+                            looping = actionList[i][j].fromValue;
+                        }
+                    }
+				}
+				duration += durationForPipe;
+			}
+		}
+
+		// having only a single pipe makes things much more efficient, so treat it separately
+		if (numOfPipes == 1) {
+
+			if (loopingRelative) {
+                new _LabaTimer(elem, function (fv,f) {
+                    if (f == true) {
+                        for (var j = 0; j < localThis.kMaxActions; j++) {
+                            if (actionList [0][j] != null && !actionList [0][j].reset (localThis)) {
+                                break;
+                            }
+                        }
+                    }
+                    for (var i = 0; i < localThis.kMaxActions; i++) {
+                        if (actionList [0][i] != null && !actionList [0][i].perform (fv)) {
+                            break;
+                        }
+                    }
+                }, 0.0, 1.0, duration, onComplete, looping);
+			} else {
+				for (var j = 0; j < localThis.kMaxActions; j++) {
+					if (actionList [0][j] != null && !actionList [0][j].reset (localThis)) {
+						break;
+					}
+				}
+                new _LabaTimer (elem, function (fv,f) {
+					for (var i = 0; i < localThis.kMaxActions; i++) {
+						if (actionList [0][i] != null && !actionList [0][i].perform (fv)) {
+							break;
+						}
+					}
+				}, 0.0, 1.0, duration * localThis.kTimeScale, onComplete, looping);
+			}
+		} else {
+			
+			var nextAction = null;
+			for (var pipeIdx = numOfPipes - 1; pipeIdx >= 0; pipeIdx--) {
+
+				var durationForPipe = this.kDefaultDuration;
+				var loopingForPipe = 1.0;
+				var loopingRelativeForPipe = false;
+				for (var j = 0; j < this.kMaxActions; j++) {
+				    if (actionList [pipeIdx][j] != null) {
+                        if (actionList[pipeIdx][j].action == durationAction1 || actionList[pipeIdx][j].action == durationAction2) {
+                            durationForPipe = actionList[pipeIdx][j].fromValue;
+                        }
+                        if (actionList[pipeIdx][j].action == loopAction1) {
+                            loopingForPipe = actionList[pipeIdx][j].fromValue;
+                        }
+                        if (actionList[pipeIdx][j].action == loopAction2) {
+                            loopingRelativeForPipe = true;
+                            loopingForPipe = actionList[pipeIdx][j].fromValue;
+                        }
+                    }
+				}
+
+				let idx = pipeIdx;
+                var localNextAction = nextAction;
+				if (localNextAction == null) {
+					localNextAction = onComplete;
+				}
+				if (localNextAction == null) {
+					localNextAction = function () { return null; };
+				}
+
+
+				let loopingRelativeForPipeFinal = loopingRelativeForPipe;
+				let durationForPipeFinal = durationForPipe;
+				let loopingForPipeFinal = loopingForPipe;
+				let localNextActionFinal = localNextAction;
+
+				nextAction = function () {
+
+					if (loopingRelativeForPipeFinal) {
+                        new _LabaTimer (elem, function (fv,f) {
+							if (f == true) {
+								for (var j = 0; j < localThis.kMaxActions; j++) {
+									if (actionList [idx][j] != null && !actionList [idx][j].reset (localThis)) {
+										break;
+									}
+								}
+							}
+							for (var j = 0; j < localThis.kMaxActions; j++) {
+								if (actionList [idx][j] != null && !actionList [idx][j].perform (fv)) {
+									break;
+								}
+							}
+						}, 0.0, 1.0, durationForPipeFinal, localNextActionFinal, loopingForPipeFinal);
+					} else {
+						for (var j = 0; j < localThis.kMaxActions; j++) {
+							if (actionList [idx][j] != null && !actionList [idx][j].reset (localThis)) {
+								break;
+							}
+						}
+                        new _LabaTimer (elem, function (fv,f) {
+							for (var j = 0; j < localThis.kMaxActions; j++) {
+								if (actionList [idx][j] != null && !actionList [idx][j].perform (fv)) {
+									break;
+								}
+							}
+						}, 0.0, 1.0, durationForPipeFinal * localThis.kTimeScale, localNextActionFinal, loopingForPipeFinal);
+					}
+				};
+			}
+
+			if (nextAction != null) {
+				nextAction ();
+			} else {
+				if (onComplete != null) {
+					onComplete ();
+				}
+			}
+
+		}
+	}
+
+	animate(elem, animationString, onComplete) {
+		if (animationString.includes ("[")) {
+			var parts = animationString.replace ('[', ' ').split ("]");
+			for (var i = 0; i < parts.length; i++) {
+				var part = parts[i];
+				if (part.length > 0) {
+					this.animateOne (elem, part, onComplete, null);
+					onComplete = null;
+				}
+			}
+		} else {
+			this.animateOne (elem, animationString, onComplete, null);
+			onComplete = null;
+		}
+	}
 	
 	
 	
 	
+	registerOperation(charOperator, initFunc, performFunc, describeFunc){
+		this.InitActions[charOperator] = initFunc
+		this.PerformActions[charOperator] = performFunc
+		this.DescribeActions[charOperator] = describeFunc
+	}
 	
 	constructor() {
 		this.allEasings = [
@@ -90,27 +555,119 @@ class _Laba {
 		this.kMaxPipes = 40;
 		this.kMaxActions = 40;
 		this.kDefaultDuration = 0.87;
-	}
-	
-	isOperator(c) {
-        if (c == ',' || c == '|' || c == '!' || c == 'e') {
-            return true;
-        }
-        return (c in InitActions);
-    }
+		this.kTimeScale = 1.0;
+		
+		this.registerOperation(
+				'L',
+				function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = -1.0;
+                    }
+                    newAction.fromValue = newAction.toValue = newAction.rawValue;
+                    return newAction;
+                },
+                function (rt, v, action) { return null; },
+                function (sb, action) { return null; }
+        );
+		
+        this.registerOperation(
+                'l',
+                function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = -1.0;
+                    }
+                    newAction.fromValue = newAction.toValue = newAction.rawValue;
+                    return newAction;
+                },
+                function (rt, v, action) { return null; },
+                function (sb, action) { return null; }
+        );
 
-    isNumber(c) {
-        return (c == '+' || c == '-' || c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' || c == '.');
-    }
-	
-    
-	
-	
-	
-	
-	
-	
-	
+        this.registerOperation(
+                'd',
+                function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = kDefaultDuration;
+                    }
+                    newAction.fromValue = newAction.toValue = newAction.rawValue;
+                    return newAction;
+                },
+                function (rt, v, action) { return null; },
+                function (sb, action) { return null; }
+        );
+
+        this.registerOperation(
+                'D',
+                function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = kDefaultDuration;
+                    }
+                    // TODO: Figure out how we want to handle child index
+                    //newAction.fromValue = newAction.toValue = newAction.rawValue * newAction.elem.GetSiblingIndex();
+                    return newAction;
+                },
+                function (rt, v, action) { return null; },
+                function (sb, action) { return null; }
+        );
+
+        this.registerOperation(
+                'x',
+                function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.style.left;
+                        newAction.toValue = newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.rawValue;
+                        newAction.toValue = newAction.elem.style.left;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+					elem.style.left = v + "px";
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append(String.format(Locale.US, "move to {0} x pos, ", action.rawValue));
+                    } else {
+                        sb.append(String.format(Locale.US, "move from {0} x pos, ", action.rawValue));
+                    }
+                }
+        );
+
+
+        this.registerOperation(
+                'y',
+                function (newAction) {
+                    if (newAction.rawValue == this.LabaDefaultValue) {
+                        newAction.rawValue = 0.0;
+                    }
+                    if(!newAction.inverse){
+                        newAction.fromValue = newAction.elem.style.top;
+                        newAction.toValue = newAction.rawValue;
+                    }else{
+                        newAction.fromValue = newAction.rawValue;
+                        newAction.toValue = newAction.elem.style.top;
+                    }
+                    return newAction;
+                },
+                function (elem, v, action) {
+					elem.style.top = v + "px";
+                    return null;
+                },
+                function (sb, action) {
+                    if(!action.inverse ) {
+                        sb.append(String.format(Locale.US, "move to %f y pos, ", action.rawValue));
+                    } else {
+                        sb.append(String.format(Locale.US, "move from %f y pos, ", action.rawValue));
+                    }
+                    return null;
+                }
+        );
+
+	}
 	
     easeLinear(val) {
     	let start = 0.0;

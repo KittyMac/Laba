@@ -4,7 +4,9 @@
 	</head>
 
 	<body>
-		<div id="tes">Hello World</div>
+		<div id ="container">
+		    <div id="animation" style="position:absolute">Hello World</div>
+		</div>
 		
 		<script>
 			
@@ -14,6 +16,9 @@
 			
 			console.log("isNumber('a'): " + Laba.isNumber('a'))
 			console.log("isNumber('3'): " + Laba.isNumber('3'))
+			
+			var elem = document.getElementById("animation"); 
+			Laba.animate(elem, "[d2x200][d1.3y200]")
 			
 		</script>
 	</body>
