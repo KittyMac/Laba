@@ -1,5 +1,6 @@
 body {
     background-color: #cdedf3;
+	font-size:2em;
 }
 
 h1 {
@@ -38,13 +39,13 @@ ul {
 
 #animation {
 	background-color: #0e5e6e;
-	width:50px;
-	height:50px;
+	width:100px;
+	height:100px;
 	margin: 0 auto;
 	color:white;
 	text-align: center;
 	vertical-align: middle;
-	line-height: 50px;
+	line-height: 100px;
 }
 
 #animation_container {
@@ -62,6 +63,7 @@ ul {
 
 input {
 	width: 100%;
+	font-size:0.8em;
 }
 
 #editor {
