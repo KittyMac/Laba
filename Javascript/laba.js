@@ -269,6 +269,7 @@ class _LabaAction {
 
 	perform(v) {
 		if (this.action != null) {
+			//console.log("this.easing: " + this.easingName)
 			this.action (this.elem, this.fromValue + (this.toValue - this.fromValue) * this.easing(v), this);
 			return true;
 		}
@@ -335,6 +336,7 @@ class _Laba {
                             currentPipeIdx++;
                             currentActionIdx = 0;
                         }
+						
                         combinedActions [currentPipeIdx][currentActionIdx] = new _LabaAction (this, 'd', elem, false, this.kDefaultDuration * 0.26, easingAction, easingName);
                         currentPipeIdx++;
                         currentActionIdx = 0;
@@ -406,7 +408,7 @@ class _Laba {
 				} else {
 					if (action == 'e') {
 						var easingIdx = (value);
-						if (easingIdx >= 0 && idx < allEasings.length) {
+						if (easingIdx >= 0 && idx < this.allEasings.length) {
 							easingAction = this.allEasings [easingIdx];
 							easingName = this.allEasingsByName [easingIdx];
 						}
@@ -1015,7 +1017,7 @@ class _Laba {
                     if(!action.inverse ) {
                         sb.append("move left {0} units, ".format(action.rawValue));
                     } else {
-                        sb.append("move in from left {0} units, ".format(action.rawValue));
+                        sb.append("move in from right {0} units, ".format(action.rawValue));
                     }
                     return null;
                 }
@@ -1045,7 +1047,7 @@ class _Laba {
                     if(!action.inverse) {
                         sb.append("move right {0} units, ".format(action.rawValue));
                     } else {
-                        sb.append("move in from right {0} units, ".format(action.rawValue));
+                        sb.append("move in from left {0} units, ".format(action.rawValue));
                     }
                     return null;
                 }
@@ -1074,7 +1076,7 @@ class _Laba {
                     if(!action.inverse ) {
                         sb.append("move up {0} units, ".format(action.rawValue));
                     } else {
-                        sb.append("move in from above {0} units, ".format(action.rawValue));
+                        sb.append("move in from below {0} units, ".format(action.rawValue));
                     }
                     return null;
                 }
@@ -1104,7 +1106,7 @@ class _Laba {
                     if(!action.inverse ) {
                         sb.append("move down {0} units, ".format(action.rawValue));
                     } else {
-                        sb.append("move in from below {0} units, ".format(action.rawValue));
+                        sb.append("move in from above {0} units, ".format(action.rawValue));
                     }
                     return null;
                 }

@@ -21,9 +21,19 @@ ul {
 .li1 { background: #F5F5F5; }
 .li2 { background: #eee; }
 
+#description_container {
+	background-color: #e6ebec;
+	padding-left:10px;
+	padding-right:10px;
+	padding-bottom:10px;
+	font-size:0.6em;
+	font-style: italic;
+}
+
 #help_container {
 	background-color: #e6ebec;
 	padding:10px;
+	font-size:0.6em;
 }
 
 #animation {
@@ -45,7 +55,9 @@ ul {
 
 #editor_container {
 	background-color: #e6ebec;
-	padding:10px;
+	padding-top:10px;
+	padding-left:10px;
+	padding-right:10px;
 }
 
 input {

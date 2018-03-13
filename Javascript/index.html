@@ -12,28 +12,60 @@
 		<div id="editor_container">
 			<input id="editor" type="text" onkeyup="runLaba()" placeholder="!&lt;!f" />
 		</div>
+		<div id="description_container">
+			
+		</div>
 		<div id="help_container">
 			<ul>
-				<li class="li1">x move to x position</li>
-				<li class="li2">y move to y position</li>
-				<li class="li1">&lt; move left</li>
-				<li class="li2">&gt; move right</li>
-				<li class="li1">^ move up</li>
-				<li class="li2">v move up</li>
-				<li class="li1">f alpha fade</li>
-				<li class="li2">s uniform scale</li>
-				<li class="li1">r roll</li>
-				<li class="li2">p pitch</li>
-				<li class="li1">w yaw</li>
-				<li class="li2">d duration for current pipe</li>
-				<li class="li1">D staggered duration based on sibling/child index</li>
-				<li class="li2">L loop (absolute) this segment (value is number of times to loop, -1 means loop infinitely)</li>
-				<li class="li1">l loop (relative) this segment (value is number of times to loop, -1 means loop infinitely)</li>
-				<li class="li2">e easing (we allow e# for shorthand or full easeInOutQuad)</li>
-				<li class="li1">| pipe animations (chain)</li>
-				<li class="li2">, pipe animations with built in delay</li>
-				<li class="li1">! invert an action (instead of move left, its move to current position from the right)</li>
-				<li class="li2">[] concurrent Laba animations ( example: [>d2][!fd1] )</li>
+				<li class="li1"><b>Examples</b></li>
+				<li class="li2">!&lt;!f</li>
+				<li class="li1">d0r270|!&lt;!fr90</i></li>
+				<li class="li2">[s2|s1][r360][p0|p360][f0d0|!f]</li>
+				
+				<li class="li1">&nbsp;</li>
+				<li class="li1"><b>Operators</b></li>
+				<li class="li1">x - move to x position</li>
+				<li class="li2">y - move to y position</li>
+				<li class="li1">&lt; - move left</li>
+				<li class="li2">&gt; - move right</li>
+				<li class="li1">^ - move up</li>
+				<li class="li2">v - move up</li>
+				<li class="li1">f - alpha fade</li>
+				<li class="li2">s - uniform scale</li>
+				<li class="li1">r - roll</li>
+				<li class="li2">p - pitch</li>
+				<li class="li1">w - yaw</li>
+				<li class="li2">d - duration for current pipe</li>
+				<li class="li1">D - staggered duration based on sibling/child index</li>
+				<li class="li2">L - loop (absolute) this segment (value is number of times to loop, -1 means loop infinitely)</li>
+				<li class="li1">l - loop (relative) this segment (value is number of times to loop, -1 means loop infinitely)</li>
+				<li class="li1">| - pipe animations (chain)</li>
+				<li class="li2">, - pipe animations with built in delay</li>
+				<li class="li1">! - invert an action (instead of move left, its move to current position from the right)</li>
+				<li class="li2">[] - concurrent Laba animations ( example: [>d2][!fd1] )</li>
+				<li class="li1">e - easing (we allow e# for shorthand or full easeInOutQuad), applies to all operators after</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e0 or easeLinear</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e1 or easeInQuad</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e2 or easeOutQuad</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e3 or easeInOutQuad</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e4 or easeInCubic</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e5 or easeOutCubic</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e6 or easeInOutCubic</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e7 or easeInQuart</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e8 or easeOutQuart</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e9 or easeInOutQuart</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e10 or easeInQuint</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e11 or easeOutQuint</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e12 or easeInOutQuint</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e13 or easeInSine</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e14 or easeOutSine</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e15 or easeInOutSine</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e16 or easeInExpo</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e17 or easeOutExpo</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e18 or easeInOutExpo</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e19 or easeInCirc</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e20 or easeOutCirc</li>
+				<li class="li1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e21 or easeInOutCirc</li>
 			</ul>
 		</div>
 		
@@ -43,6 +75,7 @@
 			
 			function runLaba() {
 				var editorElem = document.getElementById("editor"); 
+				var descriptionElem = document.getElementById("description_container"); 
 				var animationElem = document.getElementById("animation");
 			
 				var animationString = editorElem.value;
@@ -58,9 +91,9 @@
 					animationElem.labaResetElemVars();
 				}
 				
-				Laba.animate(animationElem, animationString, function() {
-					console.log(Laba.describe(animationElem, animationString))
-				})
+				Laba.animate(animationElem, animationString)
+				
+				descriptionElem.innerText = Laba.describe(animationElem, animationString)
 			}
 
 
