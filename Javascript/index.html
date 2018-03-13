@@ -6,6 +6,9 @@
 	</head>
 
 	<body>
+		<div id="title_container">
+			<a href="https://github.com/KittyMac/Laba">Laba</a> - A minimalistic notation system for choreographing UI animations on Unity/iOS/Android/Xamarin/HTML
+		</div>
 		<div id="animation_container">
 		    <div id="animation">laba</div>
 		</div>
@@ -79,14 +82,7 @@
 				var animationElem = document.getElementById("animation");
 			
 				var animationString = editorElem.value;
-				
-				console.log(animationString)
-			
-				//var animation = "x100y100z200";
-				//var animation = "!<100";
-				//var animation = "[s2|s1][r360][p0|p360][f0d0|!f]";
-				//var animation = "!f";
-				
+							
 				if(animationElem.labaResetElemVars != undefined) {
 					animationElem.labaResetElemVars();
 				}

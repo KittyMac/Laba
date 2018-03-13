@@ -22,6 +22,13 @@ ul {
 .li1 { background: #F5F5F5; }
 .li2 { background: #eee; }
 
+#title_container {
+	padding-left:10px;
+	padding-right:10px;
+	padding-bottom:10px;
+	font-size:0.5em;
+}
+
 #description_container {
 	background-color: #e6ebec;
 	padding-left:10px;
