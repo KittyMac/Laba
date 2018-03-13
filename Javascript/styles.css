@@ -1,0 +1,65 @@
+body {
+    background-color: #cdedf3;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+}
+
+p {
+    font-family: verdana;
+    font-size: 20px;
+}
+
+ul {
+	list-style-type: none;
+	margin:0px;
+	padding:0px;
+}
+
+.li1 { background: #F5F5F5; }
+.li2 { background: #eee; }
+
+#help_container {
+	background-color: #e6ebec;
+	padding:10px;
+}
+
+#animation {
+	background-color: #0e5e6e;
+	width:50px;
+	height:50px;
+	margin: 0 auto;
+	color:white;
+	text-align: center;
+	vertical-align: middle;
+	line-height: 50px;
+}
+
+#animation_container {
+	background-color: #74aeba;
+	text-align: center;
+	padding:75px;
+}
+
+#editor_container {
+	background-color: #e6ebec;
+	padding:10px;
+}
+
+input {
+	width: 100%;
+}
+
+#editor {
+	background-color: white;
+	border: 1px solid #000;
+}
+
+#code {
+	display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}

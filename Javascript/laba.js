@@ -576,14 +576,17 @@ class _Laba {
 		if (elem.labaTransformX == undefined){
 			
 			let localElem = elem;
-			localElem.labaTransformX = 0;
-			localElem.labaTransformY = 0;
-			localElem.labaTransformZ = 0;
-			localElem.labaRotationX = 0;
-			localElem.labaRotationY = 0;
-			localElem.labaRotationZ = 0;
-			localElem.labaScale = 1;
-			localElem.labaAlpha = 1;
+			localElem.labaResetElemVars = function() {
+				localElem.labaTransformX = 0;
+				localElem.labaTransformY = 0;
+				localElem.labaTransformZ = 0;
+				localElem.labaRotationX = 0;
+				localElem.labaRotationY = 0;
+				localElem.labaRotationZ = 0;
+				localElem.labaScale = 1;
+				localElem.labaAlpha = 1;
+			}
+			localElem.labaResetElemVars()
 			
 			localElem.labaCommitElemVars = function() {
 				
@@ -993,8 +996,7 @@ class _Laba {
                 '<',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                        newAction.rawValue = newAction.elem.getMeasuredWidth();
+                        newAction.rawValue = newAction.elem.offsetWidth;
                     }
                     if(!newAction.inverse){
                         newAction.fromValue = newAction.elem.labaTransformX;
@@ -1024,8 +1026,7 @@ class _Laba {
                 '>',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                        newAction.rawValue = newAction.elem.getMeasuredWidth();
+                        newAction.rawValue = newAction.elem.offsetWidth;
                     }
                     if(!newAction.inverse){
                         newAction.fromValue = newAction.elem.labaTransformX;
@@ -1054,8 +1055,7 @@ class _Laba {
                 '^',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                        newAction.rawValue = newAction.elem.getMeasuredHeight();
+                        newAction.rawValue = newAction.elem.offsetHeight;
                     }
                     if(!newAction.inverse){
                         newAction.fromValue = newAction.elem.labaTransformY;
@@ -1084,8 +1084,7 @@ class _Laba {
                 'v',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.elem.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                        newAction.rawValue = newAction.elem.getMeasuredHeight();
+                        newAction.rawValue = newAction.elem.offsetHeight;
                     }
                     if(!newAction.inverse){
                         newAction.fromValue = newAction.elem.labaTransformY;

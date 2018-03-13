@@ -1,22 +1,72 @@
 <html>
 	<head>
+
 		<script src="laba.js"></script>
+		<link rel="stylesheet" href="styles.css">
 	</head>
 
 	<body>
-		<div id ="container">
-		    <div id="animation" style="position:absolute">Hello World</div>
+		<div id="animation_container">
+		    <div id="animation">laba</div>
+		</div>
+		<div id="editor_container">
+			<input id="editor" type="text" onkeyup="runLaba()" placeholder="!&lt;!f" />
+		</div>
+		<div id="help_container">
+			<ul>
+				<li class="li1">x move to x position</li>
+				<li class="li2">y move to y position</li>
+				<li class="li1">&lt; move left</li>
+				<li class="li2">&gt; move right</li>
+				<li class="li1">^ move up</li>
+				<li class="li2">v move up</li>
+				<li class="li1">f alpha fade</li>
+				<li class="li2">s uniform scale</li>
+				<li class="li1">r roll</li>
+				<li class="li2">p pitch</li>
+				<li class="li1">w yaw</li>
+				<li class="li2">d duration for current pipe</li>
+				<li class="li1">D staggered duration based on sibling/child index</li>
+				<li class="li2">L loop (absolute) this segment (value is number of times to loop, -1 means loop infinitely)</li>
+				<li class="li1">l loop (relative) this segment (value is number of times to loop, -1 means loop infinitely)</li>
+				<li class="li2">e easing (we allow e# for shorthand or full easeInOutQuad)</li>
+				<li class="li1">| pipe animations (chain)</li>
+				<li class="li2">, pipe animations with built in delay</li>
+				<li class="li1">! invert an action (instead of move left, its move to current position from the right)</li>
+				<li class="li2">[] concurrent Laba animations ( example: [>d2][!fd1] )</li>
+			</ul>
 		</div>
 		
+		
+		
 		<script>
-						
-			var elem = document.getElementById("animation"); 
-			//var animation = "x100y100z200";
-			//var animation = "!<100";
-			var animation = "[s2|s1][r360][p0|p360][f0d0|!f]";
-			Laba.animate(elem, animation, function() {
-				console.log(Laba.describe(elem, animation))
-			})
+			
+			function runLaba() {
+				var editorElem = document.getElementById("editor"); 
+				var animationElem = document.getElementById("animation");
+			
+				var animationString = editorElem.value;
+				
+				console.log(animationString)
+			
+				//var animation = "x100y100z200";
+				//var animation = "!<100";
+				//var animation = "[s2|s1][r360][p0|p360][f0d0|!f]";
+				//var animation = "!f";
+				
+				if(animationElem.labaResetElemVars != undefined) {
+					animationElem.labaResetElemVars();
+				}
+				
+				Laba.animate(animationElem, animationString, function() {
+					console.log(Laba.describe(animationElem, animationString))
+				})
+			}
+
+
+			var editorElem = document.getElementById("editor");
+			editorElem.value = "!<!f";
+			runLaba()
 						
 		</script>
 	</body>
