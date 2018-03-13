@@ -842,17 +842,18 @@ class _Laba {
 	    ]
 
 		this.LabaDefaultValue = Number.MIN_VALUE;
-		let LabaDefaultValueFinal = this.LabaDefaultValue
-
+		
 		this.InitActions = {};
 		this.PerformActions = {};
 		this.DescribeActions = {};
-
 
 		this.kMaxPipes = 40;
 		this.kMaxActions = 40;
 		this.kDefaultDuration = 0.87;
 		this.kTimeScale = 1.0;
+		
+		let LabaDefaultValueFinal = this.LabaDefaultValue
+		let LabaDefaultDuration = this.kDefaultDuration
 		
 		this.registerOperation(
 				'L',
@@ -884,7 +885,7 @@ class _Laba {
                 'd',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.rawValue = kDefaultDuration;
+                        newAction.rawValue = LabaDefaultDuration;
                     }
                     newAction.fromValue = newAction.toValue = newAction.rawValue;
                     return newAction;
@@ -897,10 +898,15 @@ class _Laba {
                 'D',
                 function (newAction) {
                     if (newAction.rawValue == LabaDefaultValueFinal) {
-                        newAction.rawValue = kDefaultDuration;
+                        newAction.rawValue = LabaDefaultDuration;
                     }
-                    // TODO: Figure out how we want to handle child index
-                    //newAction.fromValue = newAction.toValue = newAction.rawValue * newAction.elem.GetSiblingIndex();
+										
+					var childIdx = 0;
+					var child = newAction.elem;
+					while( (child = child.previousSibling) != null ) 
+					  childIdx++;
+					
+                    newAction.fromValue = newAction.toValue = newAction.rawValue * childIdx;
                     return newAction;
                 },
                 function (rt, v, action) { return null; },
