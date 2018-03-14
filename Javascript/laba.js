@@ -408,7 +408,7 @@ class _Laba {
 				} else {
 					if (action == 'e') {
 						var easingIdx = (value);
-						if (easingIdx >= 0 && idx < this.allEasings.length) {
+						if (typeof(easingIdx) == Number && easingIdx >= 0 && idx < this.allEasings.length) {
 							easingAction = this.allEasings [easingIdx];
 							easingName = this.allEasingsByName [easingIdx];
 						}
