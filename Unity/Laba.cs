@@ -530,7 +530,7 @@ public class Laba : MonoBehaviour {
 			onComplete = null;
 		}
 
-		LeanTween.update ();
+        LeanTween.update (true);
 	}
 
 
