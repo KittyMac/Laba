@@ -523,7 +523,7 @@ public class Laba {
                 if (action.rawValue == self.labaDefaultValue) {
                     action.rawValue = self.kDefaultDuration
                 }
-                action.fromValue = action.rawValue * Double((action.target!.view.superview?.subviews.index(of: action.target!.view))!)
+                action.fromValue = action.rawValue * Double((action.target!.view.superview?.subviews.index(of: action.target!.view))! + 1)
                 action.toValue = action.fromValue
         },
             { (view, v, action) in },
@@ -1107,37 +1107,37 @@ public class Laba {
     
     
     private var allEasings : [EasingAction] = [
-        MKTweenTiming.Linear,
-        MKTweenTiming.BackIn,
-        MKTweenTiming.BackOut,
-        MKTweenTiming.BackInOut,
-        MKTweenTiming.BounceIn,
-        MKTweenTiming.BounceOut,
-        MKTweenTiming.BounceInOut,
-        MKTweenTiming.CircleIn,
-        MKTweenTiming.CircleOut,
-        MKTweenTiming.CircleInOut,
-        MKTweenTiming.CubicIn,
-        MKTweenTiming.CubicOut,
-        MKTweenTiming.CubicInOut,
-        MKTweenTiming.ElasticIn,
-        MKTweenTiming.ElasticOut,
-        MKTweenTiming.ElasticInOut,
-        MKTweenTiming.ExpoIn,
-        MKTweenTiming.ExpoOut,
-        MKTweenTiming.ExpoInOut,
-        MKTweenTiming.QuadIn,
-        MKTweenTiming.QuadOut,
-        MKTweenTiming.QuadInOut,
-        MKTweenTiming.QuartIn,
-        MKTweenTiming.QuartOut,
-        MKTweenTiming.QuartInOut,
-        MKTweenTiming.QuintIn,
-        MKTweenTiming.QuintOut,
-        MKTweenTiming.QuintInOut,
-        MKTweenTiming.SineIn,
-        MKTweenTiming.SineOut,
-        MKTweenTiming.SineInOut
+        MKTweenTiming.Linear,           // 0
+        MKTweenTiming.BackIn,           // 1
+        MKTweenTiming.BackOut,          // 2
+        MKTweenTiming.BackInOut,        // 3
+        MKTweenTiming.BounceIn,         // 4
+        MKTweenTiming.BounceOut,        // 5
+        MKTweenTiming.BounceInOut,      // 6
+        MKTweenTiming.CircleIn,         // 7
+        MKTweenTiming.CircleOut,        // 8
+        MKTweenTiming.CircleInOut,      // 9
+        MKTweenTiming.CubicIn,          // 10
+        MKTweenTiming.CubicOut,         // 11
+        MKTweenTiming.CubicInOut,       // 12
+        MKTweenTiming.ElasticIn,        // 13
+        MKTweenTiming.ElasticOut,       // 14
+        MKTweenTiming.ElasticInOut,     // 15
+        MKTweenTiming.ExpoIn,           // 16
+        MKTweenTiming.ExpoOut,          // 17
+        MKTweenTiming.ExpoInOut,        // 18
+        MKTweenTiming.QuadIn,           // 19
+        MKTweenTiming.QuadOut,          // 20
+        MKTweenTiming.QuadInOut,        // 21
+        MKTweenTiming.QuartIn,          // 22
+        MKTweenTiming.QuartOut,         // 23
+        MKTweenTiming.QuartInOut,       // 24
+        MKTweenTiming.QuintIn,          // 25
+        MKTweenTiming.QuintOut,         // 26
+        MKTweenTiming.QuintInOut,       // 27
+        MKTweenTiming.SineIn,           // 28
+        MKTweenTiming.SineOut,          // 29
+        MKTweenTiming.SineInOut         // 30
     ]
     
     private var allEasingsByName : [String] = [
