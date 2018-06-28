@@ -2,6 +2,12 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  *
+ * w width
+ * h height
+ *
+ * x move to x
+ * y move to y
+ *
  * < move left
  * > move right
  * ^ move up
@@ -13,7 +19,7 @@
  *
  * r roll
  * p pitch
- * y yaw
+ * a yaw
  *
  * d duration for current pipe
  *
@@ -36,7 +42,29 @@
 import Foundation
 import MKTween
 
-extension UIView {
+public class LabaConstraints {
+    public var view : UIView
+    public var horizontal : NSLayoutConstraint
+    public var vertical : NSLayoutConstraint
+    public var width : NSLayoutConstraint
+    public var height : NSLayoutConstraint
+    
+    public init() {
+        view = UIView()
+        horizontal = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
+        vertical = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
+        width = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
+        height = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
+    }
+    
+    public init(view:UIView, horizontal : NSLayoutConstraint, vertical : NSLayoutConstraint, width : NSLayoutConstraint, height : NSLayoutConstraint) {
+        self.view = view
+        self.horizontal = horizontal
+        self.vertical = vertical
+        self.width = width
+        self.height = height
+    }
+    
     public func Animate(_ animationString:String) {
         Laba.shared.Animate(target: self, animationString: animationString, onComplete: nil)
     }
@@ -88,8 +116,6 @@ extension String {
     }
 }
 
-
-
 struct LabaAction {
     public var inverse : Bool
     public var rawValue : Double
@@ -98,7 +124,7 @@ struct LabaAction {
     public var fromValue : Double
     public var toValue : Double
     
-    public var target : UIView?
+    public var target : LabaConstraints?
     public var performAction : PerformAction?
     public var describeAction : DescribeAction?
     public var initAction : InitAction?
@@ -131,7 +157,7 @@ struct LabaAction {
         userVector2_2 = CGPoint.zero
     }
     
-    init(_ operatorChar:Int8, _ target:UIView, _ inverse:Bool, _ rawValue:Double, _ easing:@escaping EasingAction, _ easingName:String) {
+    init(_ operatorChar:Int8, _ target:LabaConstraints, _ inverse:Bool, _ rawValue:Double, _ easing:@escaping EasingAction, _ easingName:String) {
         self.operatorChar = operatorChar
         self.target = target
         self.inverse = inverse
@@ -194,7 +220,7 @@ struct LabaAction {
 
 typealias EasingAction = MKTweenTimingFunction
 typealias InitAction = ((inout LabaAction) -> Void)
-typealias PerformAction = ((UIView, Double, LabaAction) -> Void)
+typealias PerformAction = ((LabaConstraints, Double, LabaAction) -> Void)
 typealias DescribeAction = ((inout String, LabaAction) -> Void)
 
 public class Laba {
@@ -262,20 +288,61 @@ public class Laba {
         // ************
         
         
-        // *** STAGGERED DURATION ***
+        // *** MOVE TO X ***
         RegisterOperation(
-            "D",
+            "x",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = self.kDefaultDuration
+                    action.rawValue = 0
                 }
-                action.fromValue = action.rawValue * Double((action.target!.superview?.subviews.index(of: action.target!))!)
-                action.toValue = action.fromValue
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.horizontal.constant)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = action.rawValue
+                    action.toValue = Double(action.target!.horizontal.constant)
+                }
         },
-            { (view, v, action) in },
+            { (view, v, action) in
+                action.target!.horizontal.constant = CGFloat(v)
+        },
             { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move to \(action.rawValue) x pos, ")
+                } else {
+                    description.append("move from \(action.rawValue) x pos, ")
+                }
         })
         // ************
+        
+        
+        // *** MOVE TO Y ***
+        RegisterOperation(
+            "y",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 0
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.vertical.constant)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = action.rawValue
+                    action.toValue = Double(action.target!.vertical.constant)
+                }
+        },
+            { (view, v, action) in
+                action.target!.vertical.constant = CGFloat(v)
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("move to \(action.rawValue) y pos, ")
+                } else {
+                    description.append("move from \(action.rawValue) y pos, ")
+                }
+        })
+        // ************
+        
         
         
         // *** MOVE LEFT ***
@@ -283,18 +350,18 @@ public class Laba {
             "<",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.bounds.size.width)
+                    action.rawValue = Double(action.target!.width.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.origin.x)
-                    action.toValue = Double(action.target!.frame.origin.x) - action.rawValue
+                    action.fromValue = Double(action.target!.horizontal.constant)
+                    action.toValue = Double(action.target!.horizontal.constant) - action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.frame.origin.x) + action.rawValue
-                    action.toValue = Double(action.target!.frame.origin.x)
+                    action.fromValue = Double(action.target!.horizontal.constant) + action.rawValue
+                    action.toValue = Double(action.target!.horizontal.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.origin.x = CGFloat(v)
+                action.target!.horizontal.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -311,18 +378,18 @@ public class Laba {
             ">",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.bounds.size.width)
+                    action.rawValue = Double(action.target!.width.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.origin.x)
-                    action.toValue = Double(action.target!.frame.origin.x) + action.rawValue
+                    action.fromValue = Double(action.target!.horizontal.constant)
+                    action.toValue = Double(action.target!.horizontal.constant) + action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.frame.origin.x) - action.rawValue
-                    action.toValue = Double(action.target!.frame.origin.x)
+                    action.fromValue = Double(action.target!.horizontal.constant) - action.rawValue
+                    action.toValue = Double(action.target!.horizontal.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.origin.x = CGFloat(v)
+                action.target!.horizontal.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -339,18 +406,18 @@ public class Laba {
             "^",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.bounds.size.height)
+                    action.rawValue = Double(action.target!.height.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.origin.y)
-                    action.toValue = Double(action.target!.frame.origin.y) - action.rawValue
+                    action.fromValue = Double(action.target!.vertical.constant)
+                    action.toValue = Double(action.target!.vertical.constant) - action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.frame.origin.y) + action.rawValue
-                    action.toValue = Double(action.target!.frame.origin.y)
+                    action.fromValue = Double(action.target!.vertical.constant) + action.rawValue
+                    action.toValue = Double(action.target!.vertical.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.origin.y = CGFloat(v)
+                action.target!.vertical.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -367,18 +434,18 @@ public class Laba {
             "v",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.bounds.size.height)
+                    action.rawValue = Double(action.target!.height.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.origin.y)
-                    action.toValue = Double(action.target!.frame.origin.y) + action.rawValue
+                    action.fromValue = Double(action.target!.vertical.constant)
+                    action.toValue = Double(action.target!.vertical.constant) + action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.frame.origin.y) - action.rawValue
-                    action.toValue = Double(action.target!.frame.origin.y)
+                    action.fromValue = Double(action.target!.vertical.constant) - action.rawValue
+                    action.toValue = Double(action.target!.vertical.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.origin.y = CGFloat(v)
+                action.target!.vertical.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -389,55 +456,23 @@ public class Laba {
         })
         // ************
         
-        
-        // *** UNIFORM SCALE ***
-        RegisterOperation(
-            "s",
-            { (action) in
-                if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = 1.0
-                }
-                if(action.inverse == false){
-                    action.fromValue = Double(action.target!.layer.transform.m11)
-                    action.toValue = action.rawValue
-                }else{
-                    action.fromValue = (action.rawValue > 0.5 ? 0.0 : 1.0)
-                    action.toValue = action.rawValue
-                }
-        },
-            { (view, v, action) in
-                action.target!.layer.transform.m11 = CGFloat(v)
-                action.target!.layer.transform.m22 = CGFloat(v)
-                action.target!.setNeedsDisplay()
-        },
-            { (description, action) in
-                if(action.inverse == false) {
-                    description.append("scale to \(Int(action.rawValue*100))%, ")
-                } else {
-                    description.append("scale in from \(Int(action.rawValue*100))%, ")
-                }
-        })
-        // ************
-        
-        
         // *** WIDTH ***
         RegisterOperation(
             "w",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.frame.size.width)
+                    action.rawValue = Double(action.target!.width.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.size.width)
+                    action.fromValue = Double(action.target!.width.constant)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.frame.size.width)
+                    action.toValue = Double(action.target!.width.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.size.width = CGFloat(v)
-                action.target!.setNeedsDisplay()
+                action.target!.width.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -454,19 +489,18 @@ public class Laba {
             "h",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.frame.size.height)
+                    action.rawValue = Double(action.target!.height.constant)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.frame.size.height)
+                    action.fromValue = Double(action.target!.height.constant)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.frame.size.height)
+                    action.toValue = Double(action.target!.height.constant)
                 }
         },
             { (view, v, action) in
-                action.target!.frame.size.height = CGFloat(v)
-                action.target!.setNeedsDisplay()
+                action.target!.height.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -479,6 +513,54 @@ public class Laba {
         
         
         
+        
+        
+        
+        // *** STAGGERED DURATION ***
+        RegisterOperation(
+            "D",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = self.kDefaultDuration
+                }
+                action.fromValue = action.rawValue * Double((action.target!.view.superview?.subviews.index(of: action.target!.view))!)
+                action.toValue = action.fromValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
+
+        // *** UNIFORM SCALE ***
+        RegisterOperation(
+            "s",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = 1.0
+                }
+                if(action.inverse == false){
+                    action.fromValue = Double(action.target!.view.layer.transform.m11)
+                    action.toValue = action.rawValue
+                }else{
+                    action.fromValue = (action.rawValue > 0.5 ? 0.0 : 1.0)
+                    action.toValue = action.rawValue
+                }
+        },
+            { (view, v, action) in
+                action.target!.view.layer.transform.m11 = CGFloat(v)
+                action.target!.view.layer.transform.m22 = CGFloat(v)
+                action.target!.view.setNeedsDisplay()
+        },
+            { (description, action) in
+                if(action.inverse == false) {
+                    description.append("scale to \(Int(action.rawValue*100))%, ")
+                } else {
+                    description.append("scale in from \(Int(action.rawValue*100))%, ")
+                }
+        })
+        // ************
+
+        
         // *** ROLL ***
         RegisterOperation(
             "r",
@@ -487,7 +569,7 @@ public class Laba {
                     action.rawValue = 0.0
                 }
                 
-                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.z") as! Double
+                let currentRotation = action.target!.view.value(forKeyPath: "layer.transform.rotation.z") as! Double
                 if(action.inverse == false){
                     action.fromValue = currentRotation
                     action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
@@ -497,8 +579,8 @@ public class Laba {
                 }
         },
             { (view, v, action) in
-                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.z")
-                action.target!.setNeedsDisplay()
+                action.target!.view.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.z")
+                action.target!.view.setNeedsDisplay()
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -517,7 +599,7 @@ public class Laba {
                     action.rawValue = 0.0
                 }
                 
-                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.x") as! Double
+                let currentRotation = action.target!.view.value(forKeyPath: "layer.transform.rotation.x") as! Double
                 if(action.inverse == false){
                     action.fromValue = currentRotation
                     action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
@@ -527,8 +609,8 @@ public class Laba {
                 }
         },
             { (view, v, action) in
-                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.x")
-                action.target!.setNeedsDisplay()
+                action.target!.view.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.x")
+                action.target!.view.setNeedsDisplay()
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -541,13 +623,13 @@ public class Laba {
         
         // *** YAW ***
         RegisterOperation(
-            "y",
+            "a",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
                     action.rawValue = 0.0
                 }
                 
-                let currentRotation = action.target!.value(forKeyPath: "layer.transform.rotation.y") as! Double
+                let currentRotation = action.target!.view.value(forKeyPath: "layer.transform.rotation.y") as! Double
                 if(action.inverse == false){
                     action.fromValue = currentRotation
                     action.toValue = currentRotation - self.degreesToRadians(action.rawValue)
@@ -557,8 +639,8 @@ public class Laba {
                 }
         },
             { (view, v, action) in
-                action.target!.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.y")
-                action.target!.setNeedsDisplay()
+                action.target!.view.setValue(CGFloat(v), forKeyPath: "layer.transform.rotation.y")
+                action.target!.view.setNeedsDisplay()
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -578,7 +660,7 @@ public class Laba {
                     action.rawValue = 1.0
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.alpha)
+                    action.fromValue = Double(action.target!.view.alpha)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = (action.rawValue > 0.5 ? 0.0 : 1.0)
@@ -586,7 +668,7 @@ public class Laba {
                 }
         },
             { (view, v, action) in
-                action.target!.alpha = CGFloat(v)
+                action.target!.view.alpha = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -601,7 +683,7 @@ public class Laba {
     
     
     
-    private func ParseAnimationString(_ target:UIView, _ charString:[Int8], _ startIdx:Int, _ endIdx:Int) -> [[LabaAction]] {
+    private func ParseAnimationString(_ target:LabaConstraints, _ charString:[Int8], _ startIdx:Int, _ endIdx:Int) -> [[LabaAction]] {
         
         var idx : Int = startIdx
         
@@ -729,7 +811,7 @@ public class Laba {
     
     
     
-    private func AnimateOne(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
+    private func AnimateOne(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
         
         sb = nil
         
@@ -785,7 +867,7 @@ public class Laba {
     
     
     private var sb:String? = nil
-    private func DescribeOne(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
+    private func DescribeOne(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?) {
         
         sb = ""
         
@@ -805,7 +887,7 @@ public class Laba {
     }
     
     
-    private func SharedProcessIndividualLabaString(_ target:UIView, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,(()->Void)?)->Void)) {
+    private func SharedProcessIndividualLabaString(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,(()->Void)?)->Void)) {
         var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
         let durationAction1 : Int8 = 100 // 'd'
         let durationAction2 : Int8 = 68 // 'D'
@@ -986,7 +1068,7 @@ public class Laba {
         
     }
     
-    public func Animate(target:UIView, animationString:String, onComplete:(()->Void)?) {
+    public func Animate(target:LabaConstraints, animationString:String, onComplete:(()->Void)?) {
         
         var localOnComplete = onComplete
 
@@ -994,9 +1076,11 @@ public class Laba {
             AnimateOne(target, animationAsciiString, startIdx, endIdx, localOnComplete)
             localOnComplete = nil
         })
+        
+        MKTween.shared.handleTick(CACurrentMediaTime())
     }
     
-    public func Describe(target:UIView, animationString:String) {
+    public func Describe(target:LabaConstraints, animationString:String) {
         
         SharedAnimateProcessString(animationString, { (animationAsciiString, startIdx, endIdx) in
             DescribeOne(target, animationAsciiString, startIdx, endIdx, nil)
