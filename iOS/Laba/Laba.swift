@@ -2,6 +2,8 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  *
+ * . delay
+ *
  * w width
  * h height
  *
@@ -44,17 +46,17 @@ import MKTween
 
 public class LabaConstraints {
     public var view : UIView
-    public var horizontal : NSLayoutConstraint
-    public var vertical : NSLayoutConstraint
-    public var width : NSLayoutConstraint
-    public var height : NSLayoutConstraint
+    public var horizontal : NSLayoutConstraint?
+    public var vertical : NSLayoutConstraint?
+    public var width : NSLayoutConstraint?
+    public var height : NSLayoutConstraint?
     
     public init() {
         view = UIView()
-        horizontal = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        vertical = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        width = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        height = NSLayoutConstraint(item: UIColor.black, attribute: .notAnAttribute, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
+        horizontal = nil
+        vertical = nil
+        width = nil
+        height = nil
     }
     
     public init(view:UIView, horizontal : NSLayoutConstraint, vertical : NSLayoutConstraint, width : NSLayoutConstraint, height : NSLayoutConstraint) {
@@ -63,6 +65,36 @@ public class LabaConstraints {
         self.vertical = vertical
         self.width = width
         self.height = height
+    }
+    
+    public init(view:UIView) {
+        self.view = view
+        
+        horizontal = nil
+        vertical = nil
+        width = nil
+        height = nil
+        
+        var constraintsView:UIView? = view
+        while constraintsView != nil {
+            for constraint in constraintsView!.constraints {
+                if constraint.firstItem === view {
+                    if constraint.firstAttribute == .left || constraint.firstAttribute == .right || constraint.firstAttribute == .centerX {
+                        self.horizontal = constraint
+                    }
+                    if constraint.firstAttribute == .bottom || constraint.firstAttribute == .top || constraint.firstAttribute == .centerY {
+                        self.vertical = constraint
+                    }
+                    if constraint.firstAttribute == .width {
+                        self.width = constraint
+                    }
+                    if constraint.firstAttribute == .height {
+                        self.height = constraint
+                    }
+                }
+            }
+            constraintsView = constraintsView!.superview
+        }
     }
     
     public func Animate(_ animationString:String) {
@@ -232,6 +264,7 @@ public class Laba {
     private let kMaxPipes = 10
     private let kMaxActions = 10
     private let kDefaultDuration : Double = 0.87
+    private let kDefaultDelay : Double = 0.27
     
     public static let shared = Laba()
     private init() {
@@ -287,6 +320,20 @@ public class Laba {
         })
         // ************
         
+        // *** DELAY ***
+        RegisterOperation(
+            ".",
+            { (action) in
+                if (action.rawValue == self.labaDefaultValue) {
+                    action.rawValue = self.kDefaultDelay
+                }
+                action.fromValue = action.rawValue
+                action.toValue = action.rawValue
+        },
+            { (view, v, action) in },
+            { (description, action) in
+        })
+        // ************
         
         // *** MOVE TO X ***
         RegisterOperation(
@@ -296,15 +343,15 @@ public class Laba {
                     action.rawValue = 0
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.horizontal.constant)
+                    action.fromValue = Double(action.target?.horizontal?.constant ?? 0.0)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.horizontal.constant)
+                    action.toValue = Double(action.target?.horizontal?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.horizontal.constant = CGFloat(v)
+                action.target?.horizontal?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -324,15 +371,15 @@ public class Laba {
                     action.rawValue = 0
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.vertical.constant)
+                    action.fromValue = Double(action.target?.vertical?.constant ?? 0.0)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.vertical.constant)
+                    action.toValue = Double(action.target?.vertical?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.vertical.constant = CGFloat(v)
+                action.target?.vertical?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -350,18 +397,18 @@ public class Laba {
             "<",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.width.constant)
+                    action.rawValue = Double(action.target?.width?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.horizontal.constant)
-                    action.toValue = Double(action.target!.horizontal.constant) - action.rawValue
+                    action.fromValue = Double(action.target?.horizontal?.constant ?? 0.0)
+                    action.toValue = Double(action.target?.horizontal?.constant ?? 0.0) - action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.horizontal.constant) + action.rawValue
-                    action.toValue = Double(action.target!.horizontal.constant)
+                    action.fromValue = Double(action.target?.horizontal?.constant ?? 0.0) + action.rawValue
+                    action.toValue = Double(action.target?.horizontal?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.horizontal.constant = CGFloat(v)
+                action.target?.horizontal?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -378,18 +425,18 @@ public class Laba {
             ">",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.width.constant)
+                    action.rawValue = Double(action.target?.width?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.horizontal.constant)
-                    action.toValue = Double(action.target!.horizontal.constant) + action.rawValue
+                    action.fromValue = Double(action.target?.horizontal?.constant ?? 0.0)
+                    action.toValue = Double(action.target?.horizontal?.constant ?? 0.0) + action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.horizontal.constant) - action.rawValue
-                    action.toValue = Double(action.target!.horizontal.constant)
+                    action.fromValue = Double(action.target?.horizontal?.constant ?? 0.0) - action.rawValue
+                    action.toValue = Double(action.target?.horizontal?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.horizontal.constant = CGFloat(v)
+                action.target?.horizontal?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -406,18 +453,18 @@ public class Laba {
             "^",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.height.constant)
+                    action.rawValue = Double(action.target?.height?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.vertical.constant)
-                    action.toValue = Double(action.target!.vertical.constant) - action.rawValue
+                    action.fromValue = Double(action.target?.vertical?.constant ?? 0.0)
+                    action.toValue = Double(action.target?.vertical?.constant ?? 0.0) - action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.vertical.constant) + action.rawValue
-                    action.toValue = Double(action.target!.vertical.constant)
+                    action.fromValue = Double(action.target?.vertical?.constant ?? 0.0) + action.rawValue
+                    action.toValue = Double(action.target?.vertical?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.vertical.constant = CGFloat(v)
+                action.target?.vertical?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -434,18 +481,18 @@ public class Laba {
             "v",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.height.constant)
+                    action.rawValue = Double(action.target?.height?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.vertical.constant)
-                    action.toValue = Double(action.target!.vertical.constant) + action.rawValue
+                    action.fromValue = Double(action.target?.vertical?.constant ?? 0.0)
+                    action.toValue = Double(action.target?.vertical?.constant ?? 0.0) + action.rawValue
                 }else{
-                    action.fromValue = Double(action.target!.vertical.constant) - action.rawValue
-                    action.toValue = Double(action.target!.vertical.constant)
+                    action.fromValue = Double(action.target?.vertical?.constant ?? 0.0) - action.rawValue
+                    action.toValue = Double(action.target?.vertical?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.vertical.constant = CGFloat(v)
+                action.target?.vertical?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -461,18 +508,18 @@ public class Laba {
             "w",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.width.constant)
+                    action.rawValue = Double(action.target?.width?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.width.constant)
+                    action.fromValue = Double(action.target?.width?.constant ?? 0.0)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.width.constant)
+                    action.toValue = Double(action.target?.width?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.width.constant = CGFloat(v)
+                action.target?.width?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -489,18 +536,18 @@ public class Laba {
             "h",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
-                    action.rawValue = Double(action.target!.height.constant)
+                    action.rawValue = Double(action.target?.height?.constant ?? 0.0)
                 }
                 if(action.inverse == false){
-                    action.fromValue = Double(action.target!.height.constant)
+                    action.fromValue = Double(action.target?.height?.constant ?? 0.0)
                     action.toValue = action.rawValue
                 }else{
                     action.fromValue = action.rawValue
-                    action.toValue = Double(action.target!.height.constant)
+                    action.toValue = Double(action.target?.height?.constant ?? 0.0)
                 }
         },
             { (view, v, action) in
-                action.target!.height.constant = CGFloat(v)
+                action.target?.height?.constant = CGFloat(v)
         },
             { (description, action) in
                 if(action.inverse == false) {
@@ -815,13 +862,13 @@ public class Laba {
         
         sb = nil
         
-        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, onComplete) in
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, delay, onComplete) in
                 var localActionList:[[LabaAction]] = actionList
             
                 if (loopRelative) {
                     var lastV : Double = 1.0
                     
-                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), loops:looping), updateBlock: { (period) -> () in
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), delay: TimeInterval(delay * self.timeScale), loops:looping), updateBlock: { (period) -> () in
                         if (period.progress < lastV) {
                             for j in 0..<self.kMaxActions {
                                 if !localActionList [pipeIdx][j].Reset() {
@@ -848,7 +895,7 @@ public class Laba {
                             break
                         }
                     }
-                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), loops:looping), updateBlock: { (period) -> () in
+                    MKTween.shared.addTweenOperation(MKTweenOperation(period: MKTweenPeriod(duration: TimeInterval(duration * self.timeScale), delay: TimeInterval(delay * self.timeScale), loops:looping), updateBlock: { (period) -> () in
                         for i in 0..<self.kMaxActions {
                             if (!localActionList [pipeIdx][i].Perform(period.progress)) {
                                 break
@@ -871,7 +918,7 @@ public class Laba {
         
         sb = ""
         
-        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, onComplete) in
+        SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, delay, onComplete) in
                 var localActionList:[[LabaAction]] = actionList
                 for i in 0..<self.kMaxActions {
                     if !localActionList [pipeIdx][i].Describe (&self.sb!) {
@@ -887,16 +934,18 @@ public class Laba {
     }
     
     
-    private func SharedProcessIndividualLabaString(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,(()->Void)?)->Void)) {
+    private func SharedProcessIndividualLabaString(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,Double,(()->Void)?)->Void)) {
         var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
         let durationAction1 : Int8 = 100 // 'd'
         let durationAction2 : Int8 = 68 // 'D'
         let loopAction1 : Int8 = 76 // 'L'
         let loopAction2 : Int8 = 108 // 'l'
+        let delayAction1 : Int8 = 46 // '.'
         
         var numOfPipes : Int = 0
         
         var duration : Double = 0.0
+        var delay : Double = 0.0
         var looping : Int = 1
         var loopingRelative = false
         for i in 0..<kMaxPipes {
@@ -904,9 +953,13 @@ public class Laba {
                 numOfPipes += 1
                 
                 var durationForPipe : Double = kDefaultDuration
+                var delayForPipe : Double = 0.0
                 for j in 0..<kMaxActions {
                     if (actionList [i][j].operatorChar == durationAction1 || actionList [i][j].operatorChar == durationAction2) {
                         durationForPipe = actionList [i][j].fromValue
+                    }
+                    if (actionList [i][j].operatorChar == delayAction1) {
+                        delayForPipe = actionList [i][j].fromValue
                     }
                     if (actionList [i][j].operatorChar == loopAction1) {
                         looping = Int(actionList [i][j].fromValue)
@@ -917,6 +970,7 @@ public class Laba {
                     }
                 }
                 duration += durationForPipe
+                delay += delayForPipe
             }
         }
         
@@ -928,7 +982,7 @@ public class Laba {
         // having only a single pipe makes things much more efficient, so treat it separately
         if (numOfPipes == 1) {
             
-            processOperation(actionList, loopingRelative, looping, 0, duration, onComplete)
+            processOperation(actionList, loopingRelative, looping, 0, duration, delay, onComplete)
             
             if sb != nil {
                 
@@ -957,12 +1011,16 @@ public class Laba {
             for pipeIdx in stride(from: numOfPipes-1, to: -1, by: -1) {
                 
                 var durationForPipe : Double = kDefaultDuration
+                var delayForPipe : Double = 0.0
                 var loopingForPipe : Int = 1
                 var loopingRelativeForPipe : Bool = false
                 
                 for j in 0..<kMaxActions {
                     if (actionList [pipeIdx][j].operatorChar == durationAction1 || actionList [pipeIdx][j].operatorChar == durationAction2) {
                         durationForPipe = actionList [pipeIdx][j].fromValue
+                    }
+                    if (actionList [pipeIdx][j].operatorChar == delayAction1) {
+                        delayForPipe = actionList [pipeIdx][j].fromValue
                     }
                     if (actionList [pipeIdx][j].operatorChar == loopAction1) {
                         loopingForPipe = Int(actionList [pipeIdx][j].fromValue)
@@ -982,7 +1040,7 @@ public class Laba {
                 }
                 
                 nextAction = { () in
-                    processOperation(actionList, loopingRelativeForPipe, loopingForPipe, pipeIdx, durationForPipe, localNextAction)
+                    processOperation(actionList, loopingRelativeForPipe, loopingForPipe, pipeIdx, durationForPipe, delayForPipe, localNextAction)
                     
                     if self.sb != nil {
                         if  loopingForPipe > 1 {
@@ -1066,6 +1124,11 @@ public class Laba {
             performActionOnLabaString(animationAsciiString, 0, animationAsciiString.count)
         }
         
+    }
+    
+    
+    public func Animate(view:UIView, animationString:String, onComplete:(()->Void)?) {
+        Animate(target:LabaConstraints(view: view), animationString:animationString, onComplete:onComplete)
     }
     
     public func Animate(target:LabaConstraints, animationString:String, onComplete:(()->Void)?) {
