@@ -322,7 +322,7 @@ public class Laba {
         
         // *** DELAY ***
         RegisterOperation(
-            ".",
+            "~",
             { (action) in
                 if (action.rawValue == self.labaDefaultValue) {
                     action.rawValue = self.kDefaultDelay
@@ -940,7 +940,7 @@ public class Laba {
         let durationAction2 : Int8 = 68 // 'D'
         let loopAction1 : Int8 = 76 // 'L'
         let loopAction2 : Int8 = 108 // 'l'
-        let delayAction1 : Int8 = 46 // '.'
+        let delayAction1 : Int8 = 126 // '.'
         
         var numOfPipes : Int = 0
         
