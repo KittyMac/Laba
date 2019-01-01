@@ -79,7 +79,7 @@ public class LabaConstraints {
         while constraintsView != nil {
             for constraint in constraintsView!.constraints {
                 if constraint.firstItem === view {
-                    if constraint.firstAttribute == .left || constraint.firstAttribute == .right || constraint.firstAttribute == .centerX {
+                    if constraint.firstAttribute == .left || constraint.firstAttribute == .right || constraint.firstAttribute == .centerX || constraint.firstAttribute == .leading || constraint.firstAttribute == .trailing {
                         self.horizontal = constraint
                     }
                     if constraint.firstAttribute == .bottom || constraint.firstAttribute == .top || constraint.firstAttribute == .centerY {
