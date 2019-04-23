@@ -2,7 +2,7 @@
  * Each command can optionally be followed by a single numerical value, which makes sense only in the context of the command. For example,
  * "<120" would mean animate left 120 units.
  *
- * . delay
+ * ~ delay
  *
  * w width
  * h height
@@ -940,7 +940,7 @@ public class Laba {
         let durationAction2 : Int8 = 68 // 'D'
         let loopAction1 : Int8 = 76 // 'L'
         let loopAction2 : Int8 = 108 // 'l'
-        let delayAction1 : Int8 = 126 // '.'
+        let delayAction1 : Int8 = 126 // '~'
         
         var numOfPipes : Int = 0
         
