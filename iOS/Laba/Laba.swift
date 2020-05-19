@@ -570,7 +570,7 @@ public class Laba {
                 if (action.rawValue == self.labaDefaultValue) {
                     action.rawValue = self.kDefaultDuration
                 }
-                action.fromValue = action.rawValue * Double((action.target!.view.superview?.subviews.index(of: action.target!.view))! + 1)
+                action.fromValue = action.rawValue * Double((action.target!.view.superview?.subviews.firstIndex(of: action.target!.view))! + 1)
                 action.toValue = action.fromValue
         },
             { (view, v, action) in },
@@ -919,7 +919,7 @@ public class Laba {
         sb = ""
         
         SharedProcessIndividualLabaString(target, animationString, startIdx, endIdx, onComplete, { (actionList, loopRelative, looping, pipeIdx, duration, delay, onComplete) in
-                var localActionList:[[LabaAction]] = actionList
+                let localActionList:[[LabaAction]] = actionList
                 for i in 0..<self.kMaxActions {
                     if !localActionList [pipeIdx][i].Describe (&self.sb!) {
                         break
@@ -935,7 +935,7 @@ public class Laba {
     
     
     private func SharedProcessIndividualLabaString(_ target:LabaConstraints, _ animationString:[Int8], _ startIdx:Int, _ endIdx:Int, _ onComplete:(()->Void)?, _ processOperation:@escaping (( [[LabaAction]],Bool,Int,Int,Double,Double,(()->Void)?)->Void)) {
-        var actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
+        let actionList = ParseAnimationString (target, animationString, startIdx, endIdx)
         let durationAction1 : Int8 = 100 // 'd'
         let durationAction2 : Int8 = 68 // 'D'
         let loopAction1 : Int8 = 76 // 'L'
