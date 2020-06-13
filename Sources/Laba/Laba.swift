@@ -43,6 +43,7 @@
 
 import Foundation
 import MKTween
+import UIKit
 
 public class LabaConstraints {
     public var view : UIView
