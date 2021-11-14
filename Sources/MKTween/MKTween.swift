@@ -137,9 +137,17 @@ open class MKTween: NSObject {
             
             let period = operation.period
             
-            if let startTimeStamp = period.startTimeStamp {
+            if var startTimeStamp = period.startTimeStamp {
                 
                 let timeToStart = startTimeStamp + period.delay
+                
+                // if the duration between last update and now is too large, compress it down
+                let maxDelta = 1.0 / 4.0
+                if let updatedTimeStamp = period.updatedTimeStamp,
+                   timeStamp - updatedTimeStamp > maxDelta {
+                    startTimeStamp += (timeStamp - updatedTimeStamp) - maxDelta
+                    period.startTimeStamp = startTimeStamp
+                }
                 
                 if timeStamp >= timeToStart {
                     
